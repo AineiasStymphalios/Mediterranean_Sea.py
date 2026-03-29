@@ -64,10 +64,10 @@ Below are its features:
     - Custom north-flowing river generator (used for Nile river)
 - Two tile coasts (expandCoastToTwoTiles)
 - Option: Historical starting locations
-    - Random Historical: Randomly places all players in 4 primary and 6 secondary locations. 
-    Remaining players are placed with default methods.
-    - Fixed Historical: Places any map-appropriate Vanilla BTS Civilizations in the playerlist on fixed regions. 
-    Remaining players are placed with default methods.
+    - Historical (Shuffle): Randomly places all players in 5 primary, 5 secondary, and 8 tertiary locations, in order of priority. 
+        Remaining players are placed with default methods.
+    - Historical (Fixed): If there are any map-appropriate Vanilla BTS Civilizations in the playerlist, they are placed on fixed regions. 
+        Remaining players assignments fall back to the Shuffle method, and then to default methods.
 - Option: Open / close Suez, Bosporus, Gibraltar straits
 - Option: Mountain range settings
     - Realistic: Stronger mountain ranges (Alps, Pyrenees, etc.)
@@ -1140,7 +1140,8 @@ def _assign_all_starting_plots():
 
     final_assignments = {} 
     assigned_coords = []   
-    unassigned_players = [] 
+    used_regions = set()
+    unassigned_players = []
 
     SPAWN_REGIONS = {
         "Italy":    (0.38, 0.69, 0.07, 0.16),
@@ -1198,8 +1199,8 @@ def _assign_all_starting_plots():
         if player.isEverAlive():
             all_players.append(i)
     
-    if start_option == 2: # Historical (Fixed)
-        used_regions = set()
+    # --- PHASE 1: Fixed Assignments (Only for Option 2) ---
+    if start_option == 2:
         for playerID in all_players:
             civ_str = gc.getCivilizationInfo(gc.getPlayer(playerID).getCivilizationType()).getType()
             region_name = civ_mapping.get(civ_str)
@@ -1216,54 +1217,49 @@ def _assign_all_starting_plots():
                     used_regions.add(region_name)
                     continue 
             unassigned_players.append(playerID)
-
-        if unassigned_players:
-            # SHUFFLE leftover players so they don't always get regions in ID order
-            unassigned_players = _synced_shuffle(dice, unassigned_players)
-            available_regions = [r for r in (primary_regions + secondary_regions + tertiary_regions) if r not in used_regions]
-            available_regions = _synced_shuffle(dice, available_regions)
-            
-            still_unassigned = []
-            for playerID in unassigned_players:
-                civ_str = gc.getCivilizationInfo(gc.getPlayer(playerID).getCivilizationType()).getType()
-                if available_regions:
-                    fallback_region = available_regions.pop(0)
-                    plot_index = _find_plot_in_rect(SPAWN_REGIONS[fallback_region], "Fixed-Shuffle: " + fallback_region)
-                    if plot_index != -1:
-                        final_assignments[playerID] = plot_index
-                        print "MAP DEBUG: Fixed-Shuffle Fallback - %s assigned to %s" % (civ_str, fallback_region)
-                        p = map.plotByIndex(plot_index)
-                        assigned_coords.append((p.getX(), p.getY()))
-                    else:
-                        still_unassigned.append(playerID)
-                else:
-                    still_unassigned.append(playerID)
-            unassigned_players = still_unassigned
-
-    elif start_option == 1: # Historical (Shuffle)
-        shuffled_players = _synced_shuffle(dice, all_players)
-        p_list = _synced_shuffle(dice, primary_regions[:])
-        s_list = _synced_shuffle(dice, secondary_regions[:])
-        t_list = _synced_shuffle(dice, tertiary_regions[:])
-        all_region_names = p_list + s_list + t_list
-
-        player_idx = 0
-        for region_name in all_region_names:
-            if player_idx >= len(shuffled_players): break
-            playerID = shuffled_players[player_idx]
-            plot_index = _find_plot_in_rect(SPAWN_REGIONS[region_name], "Shuffle: " + region_name)
-            if plot_index != -1:
-                final_assignments[playerID] = plot_index
-                civ_str = gc.getCivilizationInfo(gc.getPlayer(playerID).getCivilizationType()).getType()
-                print "MAP DEBUG: Shuffle Start - %s assigned to %s" % (civ_str, region_name)
-                p = map.plotByIndex(plot_index)
-                assigned_coords.append((p.getX(), p.getY()))
-                player_idx += 1
-        unassigned_players = shuffled_players[player_idx:]
-
-    else: # Vanilla
+    else:
+        # In Shuffle or Vanilla, everyone starts as unassigned
         unassigned_players = all_players[:]
 
+    # --- PHASE 2: Prioritized Regional Shuffle (For Shuffle OR Fixed-Fallback) ---
+    if start_option != 0 and unassigned_players:
+        print "MAP DEBUG: Attempting prioritized historical region assignment"
+        
+        # Shuffle players to ensure fairness
+        unassigned_players = _synced_shuffle(dice, unassigned_players)
+        
+        # Build available lists for each tier
+        p_avail = []
+        for r in primary_regions:
+            if r not in used_regions: p_avail.append(r)
+        s_avail = []
+        for r in secondary_regions:
+            if r not in used_regions: s_avail.append(r)
+        t_avail = []
+        for r in tertiary_regions:
+            if r not in used_regions: t_avail.append(r)
+            
+        # Combine shuffled tiers
+        available_regions = _synced_shuffle(dice, p_avail) + _synced_shuffle(dice, s_avail) + _synced_shuffle(dice, t_avail)
+        
+        still_unassigned = []
+        for playerID in unassigned_players:
+            civ_str = gc.getCivilizationInfo(gc.getPlayer(playerID).getCivilizationType()).getType()
+            if available_regions:
+                fallback_region = available_regions.pop(0)
+                plot_index = _find_plot_in_rect(SPAWN_REGIONS[fallback_region], "Region-Shuffle: " + fallback_region)
+                if plot_index != -1:
+                    final_assignments[playerID] = plot_index
+                    print "MAP DEBUG: Region-Shuffle - %s assigned to %s" % (civ_str, fallback_region)
+                    p = map.plotByIndex(plot_index)
+                    assigned_coords.append((p.getX(), p.getY()))
+                else:
+                    still_unassigned.append(playerID)
+            else:
+                still_unassigned.append(playerID)
+        unassigned_players = still_unassigned
+
+    # --- PHASE 3: Generic Fallback (Map-wide quality assessment) ---
     if unassigned_players:
         for playerID in unassigned_players:
             plot_index = _fallback_start_placement(playerID, assigned_coords)
@@ -1271,7 +1267,6 @@ def _assign_all_starting_plots():
                 final_assignments[playerID] = plot_index
                 civ_str = gc.getCivilizationInfo(gc.getPlayer(playerID).getCivilizationType()).getType()
                 p = map.plotByIndex(plot_index)
-                # Corrected: generic fallback doesn't have a region_name
                 print "MAP DEBUG: Generic Fallback - %s assigned to (%d, %d)" % (civ_str, p.getX(), p.getY())
                 assigned_coords.append((p.getX(), p.getY()))
                 
