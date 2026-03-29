@@ -1,5 +1,6 @@
-
+![Standard Size Thumb](png/"StandardSizeThumb.png")
 # Description
+
 A procedurally generated Mediterranean Sea mapscript with realistic geography, climate, and historical starting locations.
 For Civilization IV.
 
@@ -34,15 +35,21 @@ Gameplay-wise, this should result in empire sizes similar to that in Inland_Sea.
 - Historical (Shuffle): Randomly places all players in 5 primary, 5 secondary, and 8 tertiary locations, in order of priority. Remaining players are placed with default methods.
 - Historical (Fixed): If there are any map-appropriate Vanilla BTS Civilizations in the playerlist, they are placed on fixed regions. Remaining players assignments fall back to the Shuffle method, and then to default methods.
 - Details are in _class HistoricalStartAssigner_
+### Landmass Options
+Default options are recommended unless one is running AI improvement mods (e.g. k-mod, AdvCiv), as landmasses could become completely blocked.
 - Option: Suez, Bosporus, Gibraltar straits
     - Open / Close
 - Option: Mountain range settings
   - Realistic: Stronger mountain ranges (Alps, Pyrenees, etc.)
-  - Reduced: Nerfs mountain ranges (recommended unless running AI improvement mods like AdvCiv, as landmasses could become completely blocked)
+  - Reduced: Nerfs mountain ranges
+
+![suez](png/suez.png)
+![marmara](png/marmara.png)
+![gibraltar](png/gibraltar.png)
 
 ### Miscellaneous
 - Improved MultilayeredFractal generator
-  - Takes matrix inputs
+  - Much easier inputs
   - More property inputs for regions
 - Lattitude-band based Terrain overrides
 - Bonus generator
