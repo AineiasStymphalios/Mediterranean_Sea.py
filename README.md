@@ -1,8 +1,11 @@
 ![Standard Size Thumb](png/"StandardSizeThumb.png")
 # Description
-
 A procedurally generated Mediterranean Sea mapscript with realistic geography, climate, and historical starting locations.
 For Civilization IV.
+![Italy](png/Italy.png)
+![greece](png/greece.png)
+![Levant](png/Levant.png)
+![Egypt](png/EgyptNile.png)
 
 # Instructions
 _Steam version:_ Add Mediterranean_sea.py to
