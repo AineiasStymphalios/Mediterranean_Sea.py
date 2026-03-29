@@ -1,17 +1,23 @@
-![StandardSizeThumb](png/StandardSizeThumb.png)
 # Description
-A procedurally generated Mediterranean Sea mapscript with realistic geography, climate, and historical starting locations.
-For Civilization IV.
+A Civilization IV mapscript which procedurally generates maps with realistic Mediterranean geography, climate, and historical starting locations.
 
-<img src="png/italy.png" width="480">
-<img src="png/greece.png" width="480">
-<img src="png/levant.png" width="480">
-<img src="png/EgyptNile.png" width="480">
+![StandardSizeThumb](png/StandardSizeThumb.png)
+<details>
+<summary>Screenshots</summary>
+<img src="png/italy.png">
+<img src="png/greece.png">
+<img src="png/levant.png">
+<img src="png/EgyptNile.png">
+</details>
+
 
 # Instructions
-_Steam version:_ Add Mediterranean_sea.py to
-C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization IV Beyond the Sword\Beyond the Sword\PublicMaps
+Download Mediterranean_Sea.py from the latest [release.](https://github.com/AineiasStymphalios/Mediterranean_Sea.py/releases)
 
+_For the Steam version:_ Add Mediterranean_sea.py to
+```
+C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization IV Beyond the Sword\Beyond the Sword\PublicMaps
+```
 **Note: This mapscript may have issues with the BUFFY Mod** (it tries to force the game into nonexistent options).
 Other basic mods (e.g. BUG) should be fine.
 Obviously mods that add Civilizations, Bonuses, Terrain etc. may cause unexpected behavior.
@@ -19,40 +25,74 @@ Obviously mods that add Civilizations, Bonuses, Terrain etc. may cause unexpecte
 # Features
 ## Map dimensions
 The script generates maps with ratios approximately 2.33:1.
-Mapsizes:
-  Duel	36×16
-  Tiny	48×20
-  Small	60×28
-  Standard	72×32
-  Large	84×36
-  Huge	92×40
+| Map Size | Dimensions |
+| :--- | :--- |
+| Duel | 36×16 |
+| Tiny | 48×20 |
+| Small | 60×28 |
+| Standard | 72×32 |
+| Large | 84×36 |
+| Huge | 92×40 |
+
 Gameplay-wise, this should result in empire sizes similar to that in Inland_Sea.py.
 
-## Custom Options:
-### Bonus generator
+## Historical starting locations
+- Historical (Fixed): If there are any map-appropriate Vanilla BTS Civilizations in the playerlist, they are placed on fixed regions. Remaining players assignments fall back to the Shuffle method, and then to default methods.
+- Historical (Shuffle): Randomly places all players in 5 primary, 5 secondary, and 8 tertiary locations, in order of priority. Remaining players are placed with default methods.
+- Vanilla: Default behavior
+
+### Start regions for Shuffle-spawn mode
+<img src="png/StartRegions.png" width="480">
+
+### Civilizations supported by Fixed-spawn mode
+
+| Era | Game Identifier | Region / Location | Notes |
+| :--- | :--- | :--- | :--- |
+| **Classical Civs** | `CIVILIZATION_ROME` | Italy | |
+|  | `CIVILIZATION_GREECE` | Greece | |
+|  | `CIVILIZATION_CARTHAGE` | Tunisia | |
+|  | `CIVILIZATION_PERSIA` | Levant | |
+|  | `CIVILIZATION_SPAIN` | Spain | |
+|  | `CIVILIZATION_CELT` | Gaul | |
+|  | `CIVILIZATION_EGYPT` | Egypt | |
+|  | `CIVILIZATION_MONGOL` | Dacia | Thracians, Scythians, Huns |
+|  | `CIVILIZATION_BABYLON` | AsiaMinor | Lydians, Phrygians, Trojans, etc. |
+| **Medieval Civs** | `CIVILIZATION_PORTUGAL` | Portugal | |
+|  | `CIVILIZATION_VIKING` | Sicilies | Norman Kingdoms of Sicily |
+|  | `CIVILIZATION_FRANCE` | Gaul | |
+|  | `CIVILIZATION_HOLY_ROMAN` | Pannonia | Austria-Hungary |
+|  | `CIVILIZATION_BYZANTIUM` | Bosporus | |
+|  | `CIVILIZATION_OTTOMAN` | AsiaMinor | |
+|  | `CIVILIZATION_ARABIA` | Levant | |
+|  | `CIVILIZATION_MALI` | Morocco | |
+
+## Bonus generation options
 - Vanilla: Default behavior (Runs strategic and food bonus checks / additions near starting plots)
 - Optional: Semi-historical resource placement
     - Swaps / removes ahistoric resources
+      - Removes or Replaces New World, Silk Road, and African resources
     - Region specific bonus placement
-### Historical starting locations
-- Vanilla: Default behavior
-- Historical (Shuffle): Randomly places all players in 5 primary, 5 secondary, and 8 tertiary locations, in order of priority. Remaining players are placed with default methods.
-- Historical (Fixed): If there are any map-appropriate Vanilla BTS Civilizations in the playerlist, they are placed on fixed regions. Remaining players assignments fall back to the Shuffle method, and then to default methods.
-- Details are in _class HistoricalStartAssigner_
-### Landmass Options
+      - e.g. adds Silk Road resources in the Levant, Stone to Egypt, Marble to Rome and Greece, Ivory to Carthage
+
+## Landmass Options
 Default options are recommended unless one is running AI improvement mods (e.g. k-mod, AdvCiv), as landmasses could become completely blocked.
-- Option: Suez, Bosporus, Gibraltar straits
-    - Open / Close
+- Option: Open or close the following straits / Ithmus:
+  - Suez
+  - Bosporus
+  - Gibraltar
 - Option: Mountain range settings
   - Realistic: Stronger mountain ranges (Alps, Pyrenees, etc.)
-  - Reduced: Nerfs mountain ranges
+  - Reduced (default): Nerfs mountain ranges
 
-<img src="png/suez.png" width="480">
-<img src="png/marmara.png" width="480">
-<img src="png/gibraltar.png" width="480">
+<details>
+<summary>Landmass variations</summary>
+<img src="png/suez.png">
+<img src="png/marmara.png">
+<img src="png/gibraltar.png">
+<img src="png/ItalyAlps.png">
+</details>
 
-
-### Miscellaneous
+## Miscellaneous
 - Improved MultilayeredFractal generator
   - Much easier inputs
   - More property inputs for regions
