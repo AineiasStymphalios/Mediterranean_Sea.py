@@ -2,10 +2,12 @@
 # Description
 A procedurally generated Mediterranean Sea mapscript with realistic geography, climate, and historical starting locations.
 For Civilization IV.
+
 <img src="png/italy.png" width="480">
 <img src="png/greece.png" width="480">
 <img src="png/levant.png" width="480">
 <img src="png/EgyptNile.png" width="480">
+
 # Instructions
 _Steam version:_ Add Mediterranean_sea.py to
 C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization IV Beyond the Sword\Beyond the Sword\PublicMaps
