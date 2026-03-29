@@ -64,11 +64,15 @@ Below are its features:
     - Custom north-flowing river generator (used for Nile river)
 - Two tile coasts (expandCoastToTwoTiles)
 - Optional: Historical starting locations
-    - Prioritizes 4 primary and 4 secondary locations. Rest of the players are placed with default methods.
+    - Random Historical: Randomly places all players in 4 primary and 6 secondary locations. 
+    Remaining players are placed with default methods.
+    - Fixed Historical: Places any map-appropriate Vanilla BTS Civilizations in the playerlist on fixed regions. 
+    Remaining players are placed with default methods.
 
 - AineiasStymph, March 28, 2026
 ##############################################################################
 '''
+_all_start_coords = [] # Store player start coords
 
 def getDescription():
     return "A procedurally generated Mediterranean Sea map with realistic geography, climate, and historical starting locations."
@@ -91,9 +95,9 @@ def getCustomMapOptionName(argsList):
 def getNumCustomMapOptionValues(argsList):
     index = argsList[0]
     if index == 0:
-        return 2
+        return 2          # Resources: Vanilla, Semi-historical
     elif index == 1:
-        return 2
+        return 3          # Starting Positions: Vanilla, Historical (Random), Historical
     return 0
 
 def getCustomMapOptionDescAt(argsList):
@@ -107,8 +111,10 @@ def getCustomMapOptionDescAt(argsList):
     elif index == 1:
         if selection == 0:
             return "Vanilla"
+        elif selection == 1:
+            return "Historical (Random)"
         else:
-            return "Semi-historical"
+            return "Historical (fixed)"
     return ""
 
 def getCustomMapOptionDefault(argsList):
@@ -116,7 +122,7 @@ def getCustomMapOptionDefault(argsList):
     if index == 0:
         return 1   # default to Semi-historical resources
     elif index == 1:
-        return 1   # default to Semi-historical starting positions
+        return 2   # default to Historical (Random) starting positions
     return 0
 
 def getGridSize(argsList):
@@ -205,14 +211,14 @@ class MultilayeredFractal(CvMapGeneratorUtil.MultilayeredFractal):
             ("Crete", 0.69, 0.31, 0.06, 0.04, 20, BalanceGrain, GatherGrain, "plateau"),
             ("Rhodes", 0.77, 0.41, 0.02, 0.04, 40, ScatterGrain, GatherGrain, "plateau"),
             ("Cyprus", 0.85, 0.41, 0.03, 0.04, 30, BalanceGrain, GatherGrain, "plateau"),
-            ("Thrace-Bithynia", 0.67, 0.71, 0.15, 0.10, 50, ScatterGrain, GatherGrain, "default"),
+            ("Thrace-Bithynia", 0.67, 0.71, 0.15, 0.10, 30, ScatterGrain, GatherGrain, "flat"),
             ("AnatAsiaMinor", 0.73, 0.48, 0.09, 0.23, 20, BalanceGrain, GatherGrain, "plateau"),
             ("AnatTaurus", 0.90, 0.62, 0.10, 0.18, 0, BalanceGrain, GatherGrain, "highland"),
             ("AnatCentral", 0.82, 0.61, 0.10, 0.20, 10, BalanceGrain, GatherGrain, "plateau"),
             ("AnatPontus", 0.82, 0.80, 0.18, 0.07, 20, BalanceGrain, GatherGrain, "highland"),
             ("AnatCilicia", 0.82, 0.52, 0.10, 0.09, 30, BalanceGrain, GatherGrain, "highland"),
             ("Levant", 0.93, 0.24, 0.07, 0.41, 10, BalanceGrain, GatherGrain, "plateau"),
-            ("Sinai", 0.90, 0.05, 0.08, 0.18, 35, ScatterGrain, GatherGrain, "plateau"),
+            ("Sinai", 0.90, 0.05, 0.08, 0.18, 30, ScatterGrain, GatherGrain, "flat"),
             ("Egypt", 0.83, 0.00, 0.08, 0.25, 30, BalanceGrain, GatherGrain, "flat"),
             ("Cyrenaica", 0.63, 0.00, 0.21, 0.18, 20, GatherGrain, GatherGrain, "flat"),
             ("Surt", 0.51, 0.00, 0.14, 0.10, 20, GatherGrain, GatherGrain, "flat"),
@@ -991,8 +997,9 @@ def addRivers():
     addNorthFlowRiver(nile_rect, min_water_area=5)
     
     # Clear historical assigner for starting points (to shuffle positions upon regeneration)
-    global _historical_assigner
+    global _historical_assigner, _all_start_coords
     _historical_assigner = None
+    _all_start_coords = []
     
 # -----------------------------------------------------------------------------
 # Coast distance
@@ -1031,41 +1038,83 @@ def expandCoastToTwoTiles():
 # -----------------------------------------------------------------------------
 # Starting plot
 # -----------------------------------------------------------------------------
-_historical_assigner = None
 def minStartingDistanceModifier():
     return 0
 
+_historical_assigner = None
 class HistoricalStartAssigner:
     """Assigns starting plots to players based on predefined historical regions."""
-    def __init__(self):
+    def __init__(self, mode="random", min_landmass=4):
+        self.mode = mode  # "random" or "fixed"
+        self.min_landmass = min_landmass   # minimum tiles in landmass to start on
         self.map = CyMap()
         self.gc = CyGlobalContext()
         self.dice = self.gc.getGame().getMapRand()
         self.iW = self.map.getGridWidth()
         self.iH = self.map.getGridHeight()
-        # Separate primary and secondary regions
-        self.primary_regions = [
-            ("Italy",    (0.40, 0.63, 0.08, 0.193)),
-            ("Greece",   (0.61, 0.37, 0.09, 0.207)),
-            ("Egypt",    (0.85, 0.05, 0.035, 0.23)),
-            ("Levant",   (0.930, 0.237, 0.066, 0.406)),
-        ]
-        self.secondary_regions = [
-            ("Tunisia",  (0.35, 0.21, 0.08, 0.23)),
-            ("Gaul",  (0.16, 0.8, 0.14, 0.15)),
-            ("Iberia",   (0.0, 0.4, 0.2, 0.32)),
-            ("Pontus",     (0.81, 0.72, 0.14, 0.20)),
-        ]
         self.assigned = {}   # playerID -> plot index
 
+        if self.mode == "random":
+            # Separate primary and secondary regions
+            self.primary_regions = [
+                ("Italy",    (0.39, 0.64, 0.09, 0.14)),
+                ("Greece",   (0.61, 0.40, 0.09, 0.21)),
+                ("Tunisia",  (0.34, 0.25, 0.10, 0.19)),
+                ("Levant",   (0.93, 0.24, 0.07, 0.41)),
+            ]
+            self.secondary_regions = [
+                ("Egypt",    (0.85, 0.05, 0.035, 0.23)),
+                ("Gaul",     (0.16, 0.8, 0.14, 0.15)),
+                ("Spain",   (0.09, 0.40, 0.12, 0.32)),
+                ("Pontus",   (0.81, 0.72, 0.14, 0.20)),
+                ("Morocco",   (0.00, 0.14, 0.14, 0.17)),
+                ("Dacia",   (0.64, 0.83, 0.12, 0.14)),
+                # ("Portugal",   (0.00, 0.40, 0.06, 0.35)),
+                # ("Pannonia",   (0.51, 0.83, 0.08, 0.13)),
+                # ("Bosporus",   (0.70, 0.66, 0.11, 0.16)),
+            ]
+        else:  # fixed
+            self.civ_mapping = {
+                # Classical Civs
+                "CIVILIZATION_ROME":      (0.39, 0.64, 0.09, 0.14),   # Italy
+                "CIVILIZATION_GREECE":    (0.61, 0.40, 0.09, 0.21),   # Greece
+                "CIVILIZATION_CARTHAGE":  (0.34, 0.25, 0.10, 0.19),    # Tunisia
+                "CIVILIZATION_PERSIA":  (0.93, 0.24, 0.07, 0.41),    # Levant
+                "CIVILIZATION_EGYPT":     (0.85, 0.05, 0.035, 0.23),   # Egypt
+                "CIVILIZATION_CELT":    (0.16, 0.8, 0.14, 0.15),     # Gaul
+                "CIVILIZATION_SPAIN":     (0.09, 0.40, 0.12, 0.32),       # Spain
+                "CIVILIZATION_MONGOL": (0.64, 0.83, 0.12, 0.14),    # Dacia (Huns, Scythians, etc.)
+                "CIVILIZATION_VIKING": (0.00, 0.14, 0.14, 0.17),    # Morocco (Vandals)
+                "CIVILIZATION_MALI": (0.00, 0.14, 0.14, 0.17),    # Morocco
+                # Medieval Civs
+                "CIVILIZATION_FRANCE":    (0.16, 0.8, 0.14, 0.15),     # Gaul
+                # "CIVILIZATION_ENGLAND":    (0.16, 0.8, 0.14, 0.15),     # Gaul
+                # "CIVILIZATION_NETHERLANDS":    (0.16, 0.8, 0.14, 0.15),     # Gaul
+                "CIVILIZATION_HOLY_ROMAN": (0.51, 0.83, 0.08, 0.13),    # Pannonia
+                # "CIVILIZATION_GERMANY": (0.51, 0.83, 0.08, 0.13),    # Pannonia
+                "CIVILIZATION_PORTUGAL": (0.00, 0.40, 0.06, 0.35),    # Pannonia
+                "CIVILIZATION_RUSSIA": (0.64, 0.83, 0.12, 0.14),    # Dacia
+                "CIVILIZATION_BYZANTIUM": (0.70, 0.66, 0.11, 0.16),    # Bosporus
+                # Non-European Civs
+                "CIVILIZATION_OTTOMAN": (0.81, 0.72, 0.14, 0.20),    # Pontus
+                "CIVILIZATION_ARABIA":  (0.93, 0.24, 0.07, 0.41),    # Levant
+                "CIVILIZATION_BABYLON":  (0.93, 0.24, 0.07, 0.41),    # Levant
+                "CIVILIZATION_SUMERIA":  (0.93, 0.24, 0.07, 0.41),    # Levant
+            }
+
     def get_start_plot(self, playerID):
-        """Return the pre-assigned plot index for the player, or None if not assigned."""
         if not self.assigned:
             self._assign_all()
         return self.assigned.get(playerID)
 
     def _assign_all(self):
-        """Build the mapping of players to start plots."""
+        if self.mode == "random":
+            self._assign_random()
+        else:
+            self._assign_fixed()
+
+    def _assign_random(self):
+        """Random assignment (shuffled primary then secondary regions)."""
         # Get all alive players
         alive_players = []
         for i in range(self.gc.getMAX_CIV_PLAYERS()):
@@ -1092,12 +1141,35 @@ class HistoricalStartAssigner:
         for region_name, rect in all_regions:
             if player_idx >= len(alive_players):
                 break
-            west, south, width, height = rect   # unpack tuple
+            west, south, width, height = rect
             plot_index = self._find_plot_in_rect(west, south, width, height, region_name)
             if plot_index is not None:
                 player = alive_players[player_idx]
                 self.assigned[player] = plot_index
                 player_idx += 1
+        # Remaining players get default placement
+
+    def _assign_fixed(self):
+        """Fixed assignment based on civilization."""
+        alive_players = []
+        for i in range(self.gc.getMAX_CIV_PLAYERS()):
+            player = self.gc.getPlayer(i)
+            if player.isEverAlive():
+                alive_players.append(i)
+
+        used_rects = set()
+        for playerID in alive_players:
+            civ_type = self.gc.getPlayer(playerID).getCivilizationType()
+            civ_str = self.gc.getCivilizationInfo(civ_type).getType()
+            if civ_str in self.civ_mapping:
+                rect = self.civ_mapping[civ_str]
+                rect_tuple = (rect[0], rect[1], rect[2], rect[3])
+                if rect_tuple not in used_rects:
+                    west, south, width, height = rect
+                    plot_index = self._find_plot_in_rect(west, south, width, height, civ_str)
+                    if plot_index is not None:
+                        self.assigned[playerID] = plot_index
+                        used_rects.add(rect_tuple)
         # Remaining players get default placement
 
     def _shuffle_list(self, lst):
@@ -1107,55 +1179,128 @@ class HistoricalStartAssigner:
             j = self.dice.get(i+1, "Shuffle regions")
             result[i], result[j] = result[j], result[i]
         return result
-        
-    def _find_plot_in_rect(self, west, south, width, height, region_name, max_attempts=200):
+
+    def _find_plot_in_rect(self, west, south, width, height, region_name):
         """Return a plot index of a random land tile inside the rectangle, or None if none found."""
-        # Convert to pixel coordinates
         west_x = int(self.iW * west)
         east_x = int(self.iW * (west + width))
         south_y = int(self.iH * south)
         north_y = int(self.iH * (south + height))
-        # Clamp to map bounds (should be fine but safety)
+        # Clamp to map bounds
         west_x = max(0, min(west_x, self.iW - 1))
         east_x = max(0, min(east_x, self.iW - 1))
         south_y = max(0, min(south_y, self.iH - 1))
         north_y = max(0, min(north_y, self.iH - 1))
 
-        # Collect all eligible land tiles in the rectangle
         eligible = []
         for x in range(west_x, east_x + 1):
             for y in range(south_y, north_y + 1):
                 pPlot = self.map.plot(x, y)
                 if not pPlot.isWater() and pPlot.getPlotType() != PlotTypes.PLOT_PEAK:
-                    eligible.append((x, y))
+                    area_id = pPlot.getArea()
+                    if area_id != -1:
+                        area = self.map.getArea(area_id)
+                        if area.getNumTiles() >= self.min_landmass:
+                            eligible.append((x, y))
         if not eligible:
             return None
 
-        # Randomly choose one
         idx = self.dice.get(len(eligible), "Historical start: %s" % region_name)
         x, y = eligible[idx]
         return self.map.plotNum(x, y)
 
+    def get_assigned_start_coords(self):
+        """Return a list of (x, y) coordinates for all assigned start plots."""
+        coords = []
+        for playerID, plot_index in self.assigned.items():
+            plot = self.map.plotByIndex(plot_index)
+            coords.append((plot.getX(), plot.getY()))
+        return coords
+
+
 def findStartingPlot(argsList):
     [playerID] = argsList
-    start_option = CyMap().getCustomMapOption(1)   # 0 = Default, 1 = Semi‑historical
+    start_option = CyMap().getCustomMapOption(1)
+    global _historical_assigner, _all_start_coords
 
+    # Handle historical modes
     if start_option == 1:
-        global _historical_assigner
+        mode = "random"
         if _historical_assigner is None:
-            _historical_assigner = HistoricalStartAssigner()
+            _historical_assigner = HistoricalStartAssigner(mode=mode)
         plot_index = _historical_assigner.get_start_plot(playerID)
         if plot_index is not None:
+            plot = CyMap().plotByIndex(plot_index)
+            _all_start_coords.append((plot.getX(), plot.getY()))
             return plot_index
 
-    # Fallback default placement (largest landmass)
-    def isValid(playerID, x, y):
-        map = CyMap()
-        pPlot = map.plot(x, y)
-        if (pPlot.getArea() != map.findBiggestArea(False).getID()):
-            return False
-        return True
-    return CvMapGeneratorUtil.findStartingPlot(playerID, isValid)
+    elif start_option == 2:
+        mode = "fixed"
+        if _historical_assigner is None:
+            _historical_assigner = HistoricalStartAssigner(mode=mode)
+        plot_index = _historical_assigner.get_start_plot(playerID)
+        if plot_index is not None:
+            plot = CyMap().plotByIndex(plot_index)
+            _all_start_coords.append((plot.getX(), plot.getY()))
+            return plot_index
+
+    # Fallback: custom placement that respects existing starts
+    return _fallback_start_placement(playerID)
+
+
+def _fallback_start_placement(playerID):
+    """Place a player on the largest landmass, respecting distance to already placed starts."""
+    map = CyMap()
+    gc = CyGlobalContext()
+    dice = gc.getGame().getMapRand()
+    player = gc.getPlayer(playerID)
+    player.AI_updateFoundValues(True)
+
+    global _all_start_coords
+
+    # Find the largest land area
+    best_area = map.findBiggestArea(False)
+
+    iW = map.getGridWidth()
+    iH = map.getGridHeight()
+    min_dist = max(iW // 8, iH // 8, 5)
+
+    # Collect suitable candidates (land, not peak, on largest area)
+    candidates = []
+    for x in range(iW):
+        for y in range(iH):
+            pPlot = map.plot(x, y)
+            if pPlot.getArea() != best_area.getID() or pPlot.isWater():
+                continue
+            if pPlot.getPlotType() == PlotTypes.PLOT_PEAK:
+                continue
+            # Compute min distance to any existing start
+            min_dist_to_start = 9999
+            for (ax, ay) in _all_start_coords:
+                d = abs(x - ax) + abs(y - ay)
+                if d < min_dist_to_start:
+                    min_dist_to_start = d
+            # Get the found value for this player
+            val = pPlot.getFoundValue(playerID)
+            # Only consider positive values (suitable plots)
+            if val > 0:
+                candidates.append((x, y, min_dist_to_start, val))
+
+    if not candidates:
+        # No suitable candidate with positive value; fall back to default placement
+        def isValid(playerID, x, y):
+            pPlot = map.plot(x, y)
+            return (pPlot.getArea() == best_area.getID())
+        return CvMapGeneratorUtil.findStartingPlot(playerID, isValid)
+
+    # Sort: highest distance first, then highest value
+    candidates.sort(key=lambda c: (-c[2], -c[3]))
+    best = candidates[0]
+    x, y = best[0], best[1]
+    # Add this plot to the global list so subsequent placements avoid it
+    _all_start_coords.append((x, y))
+    return map.plotNum(x, y)
+    
 # -----------------------------------------------------------------------------
 # Normalization overrides
 # -----------------------------------------------------------------------------
