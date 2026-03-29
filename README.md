@@ -1,19 +1,18 @@
-![Standard Size Thumb](png/"StandardSizeThumb.png")
+![StandardSizeThumb](png/StandardSizeThumb.png)
 # Description
 A procedurally generated Mediterranean Sea mapscript with realistic geography, climate, and historical starting locations.
 For Civilization IV.
-![Italy](png/Italy.png)
-![greece](png/greece.png)
-![Levant](png/Levant.png)
-![Egypt](png/EgyptNile.png)
-
+<img src="png/italy.png" width="480">
+<img src="png/greece.png" width="480">
+<img src="png/levant.png" width="480">
+<img src="png/EgyptNile.png" width="480">
 # Instructions
 _Steam version:_ Add Mediterranean_sea.py to
 C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization IV Beyond the Sword\Beyond the Sword\PublicMaps
 
-**Note: This mapscript is not compatible with the BUFFY Mod** (it tries to force the game into nonexistent options).
+**Note: This mapscript may have issues with the BUFFY Mod** (it tries to force the game into nonexistent options).
 Other basic mods (e.g. BUG) should be fine.
-Obviously mods that add Civilizations, Bonuses, Terrain etc. might cause it to behave incorrectly.
+Obviously mods that add Civilizations, Bonuses, Terrain etc. may cause unexpected behavior.
 
 # Features
 ## Map dimensions
@@ -46,9 +45,10 @@ Default options are recommended unless one is running AI improvement mods (e.g. 
   - Realistic: Stronger mountain ranges (Alps, Pyrenees, etc.)
   - Reduced: Nerfs mountain ranges
 
-![suez](png/suez.png)
-![marmara](png/marmara.png)
-![gibraltar](png/gibraltar.png)
+<img src="png/suez.png" width="480">
+<img src="png/marmara.png" width="480">
+<img src="png/gibraltar.png" width="480">
+
 
 ### Miscellaneous
 - Improved MultilayeredFractal generator
