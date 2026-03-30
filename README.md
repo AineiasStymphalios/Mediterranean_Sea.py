@@ -103,9 +103,9 @@ Default options are recommended unless one is running AI improvement mods (e.g. 
 </details>
 
 ## Miscellaneous
-- Improved MultilayeredFractal generator
-  - Much easier inputs
-  - More property inputs for regions
+- Improved MultilayeredFractal generator, based on Earth2.py
+  - Much easier inputs, resolved ton of its technical debt
+  - More input properties for regions
 - Lattitude-band based Terrain overrides
 - Bonus generator
   - Runs strategic and food bonus additions to starting plots
@@ -113,8 +113,6 @@ Default options are recommended unless one is running AI improvement mods (e.g. 
     - Swaps / removes ahistoric resources
     - Region specific bonus placement
 - River generator based on that of Tectonics.py
-  - Generates more realistic rivers
-  - More control over river frequency
   - Features river deletion / reduction regions (used to reduce rivers in Sahara desert)
   - Custom north-flowing river generator (used for Nile river)
 - Two tile coasts (expandCoastToTwoTiles)
