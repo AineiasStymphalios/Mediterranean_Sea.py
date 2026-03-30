@@ -3,7 +3,7 @@ A Civilization IV mapscript which procedurally generates maps with realistic Med
 
 ![StandardSizeThumb](png/StandardSizeThumb.png)
 <details>
-<summary>Screenshots</summary>
+<summary><h3>Screenshots</h3></summary>
 <img src="png/italy.png">
 <img src="png/greece.png">
 <img src="png/levant.png">
@@ -42,7 +42,7 @@ Gameplay-wise, this should result in empire sizes similar to that in Inland_Sea.
 - Vanilla: Default behavior
 
 ### Start regions for Shuffle-spawn mode
-<img src="png/StartRegions.png" width="480">
+<img src="png/StartRegions.png">
 
 ### Civilizations supported by Fixed-spawn mode
 If you include these civilizations to the player list in **Custom Game** and select Historical (fixed) starting locations, they will always start in the following areas of the map.
@@ -86,7 +86,7 @@ Default options are recommended unless one is running AI improvement mods (e.g. 
   - Reduced (default): Nerfs mountain ranges
 
 <details>
-<summary>Landmass variations</summary>
+<summary><h3>Landmass variations</h3></summary>
 <img src="png/suez.png">
 <img src="png/marmara.png">
 <img src="png/gibraltar.png">
