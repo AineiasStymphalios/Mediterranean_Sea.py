@@ -1,5 +1,6 @@
 # Description
 A Civilization IV mapscript which procedurally generates maps with realistic Mediterranean geography, climate, and historical starting locations.
+The mapscript should work with Civ4 BtS, Warlords, and Vanilla.
 
 ![StandardSizeThumb](png/StandardSizeThumb.png)
 <details>
@@ -14,12 +15,19 @@ A Civilization IV mapscript which procedurally generates maps with realistic Med
 # Instructions
 Download Mediterranean_Sea.py from the latest [release.](https://github.com/AineiasStymphalios/Mediterranean_Sea.py/releases)
 
-_For the Steam version:_ Add Mediterranean_sea.py to
+Add Mediterranean_sea.py to:
+- CD version:
+```
+C:\Program Files\Firaxis Games\Civilization 4\Beyond the Sword\PublicMaps
+```
+
+- Steam version:
 ```
 C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization IV Beyond the Sword\Beyond the Sword\PublicMaps
 ```
-**Note: This mapscript may have issues with the BUFFY Mod** (it tries to force the game into nonexistent options).
-Other basic mods (e.g. BUG) should be fine.
+
+## Mod support
+The mapscript should work with most vanilla-like mods (e.g. BUG, BAT, AdvCiv ...).
 Obviously mods that add Civilizations, Bonuses, Terrain etc. may cause unexpected behavior.
 
 # Features
