@@ -45,20 +45,21 @@ Gameplay-wise, this should result in empire sizes similar to that in Inland_Sea.
 <img src="png/StartRegions.png" width="480">
 
 ### Civilizations supported by Fixed-spawn mode
+If you include these civilizations to the player list in **Custom Game** and select Historical (fixed) starting locations, they will always start in the following areas of the map.
 
-| Era | Game Identifier | Region / Location | Notes |
+| Playthrough | Game Identifier | Region | Notes |
 | :--- | :--- | :--- | :--- |
 | **Classical Civs** | `CIVILIZATION_ROME` | Italy | |
 |  | `CIVILIZATION_GREECE` | Greece | |
 |  | `CIVILIZATION_CARTHAGE` | Tunisia | |
 |  | `CIVILIZATION_PERSIA` | Levant | |
-|  | `CIVILIZATION_SPAIN` | Spain | |
+|  | `CIVILIZATION_SPAIN` | Spain | Classical Iberians|
 |  | `CIVILIZATION_CELT` | Gaul | |
 |  | `CIVILIZATION_EGYPT` | Egypt | |
 |  | `CIVILIZATION_MONGOL` | Dacia | Thracians, Scythians, Huns |
-|  | `CIVILIZATION_BABYLON` | AsiaMinor | Lydians, Phrygians, Trojans, etc. |
+|  | `CIVILIZATION_BABYLON` | AsiaMinor | Lydians, Phrygians, Trojans ... |
 | **Medieval Civs** | `CIVILIZATION_PORTUGAL` | Portugal | |
-|  | `CIVILIZATION_VIKING` | Sicilies | Norman Kingdoms of Sicily |
+|  | `CIVILIZATION_VIKING` | Sicilies | Norman Kingdom of Sicily |
 |  | `CIVILIZATION_FRANCE` | Gaul | |
 |  | `CIVILIZATION_HOLY_ROMAN` | Pannonia | Austria-Hungary |
 |  | `CIVILIZATION_BYZANTIUM` | Bosporus | |
