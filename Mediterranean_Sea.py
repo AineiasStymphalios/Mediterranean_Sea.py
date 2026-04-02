@@ -116,7 +116,7 @@ def getCustomMapOptionName(argsList):
 def getNumCustomMapOptionValues(argsList):
     index = argsList[0]
     if index == 0:
-        return 2          # Resources: Vanilla, historical
+        return 2          # Resources: Vanilla, Historical
     elif index == 1:
         return 3          # Starting Positions: Vanilla, Historical (Shuffled), Historical
     elif index == 2:
