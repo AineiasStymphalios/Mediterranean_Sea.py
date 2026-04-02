@@ -1,9 +1,9 @@
 # Description
-A Civilization IV mapscript which procedurally generates maps with realistic Mediterranean geography, climate, and historical starting locations.
+A Civilization IV mapscript which procedurally generates maps with quasi-realistic Mediterranean geography, climate, and historical starting locations.
 
 ![StandardSizeThumb](png/StandardSizeThumb.png)
 <details>
-<summary>Screenshots</summary>
+<summary><h3>Screenshots</h3></summary>
 <img src="png/italy.png">
 <img src="png/greece.png">
 <img src="png/levant.png">
@@ -14,16 +14,25 @@ A Civilization IV mapscript which procedurally generates maps with realistic Med
 # Instructions
 Download Mediterranean_Sea.py from the latest [release.](https://github.com/AineiasStymphalios/Mediterranean_Sea.py/releases)
 
-_For the Steam version:_ Add Mediterranean_sea.py to
+Add Mediterranean_sea.py to:
+- CD version:
+```
+C:\Program Files\Firaxis Games\Civilization 4\Beyond the Sword\PublicMaps
+```
+
+- Steam version:
 ```
 C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization IV Beyond the Sword\Beyond the Sword\PublicMaps
 ```
-**Note: This mapscript may have issues with the BUFFY Mod** (it tries to force the game into nonexistent options).
-Other basic mods (e.g. BUG) should be fine.
-Obviously mods that add Civilizations, Bonuses, Terrain etc. may cause unexpected behavior.
+## Version support
+The mapscript supports Civ4 Beyond the Sword, Warlords, and Vanilla.
+
+## Mod support
+The mapscript should work with most vanilla-like mods (e.g. BUG, BAT, AdvCiv ...).
+Mods that _remove_ Civilizations, Bonuses, Terrain etc. may cause unexpected behavior.
 
 # Features
-## Map dimensions
+## Map Dimensions
 The script generates maps with ratios approximately 2.33:1.
 | Map Size | Dimensions |
 | :--- | :--- |
@@ -34,15 +43,15 @@ The script generates maps with ratios approximately 2.33:1.
 | Large | 84×36 |
 | Huge | 92×40 |
 
-Gameplay-wise, this should result in empire sizes similar to that in Inland_Sea.py.
+Gameplay-wise, this should result in empire sizes similar to that of Inland_Sea.py.
 
-## Historical starting locations
+## Starting Location Options
 - Historical (Fixed): If there are any map-appropriate Vanilla BTS Civilizations in the playerlist, they are placed on fixed regions. Remaining players assignments fall back to the Shuffle method, and then to default methods.
 - Historical (Shuffle): Randomly places all players in 5 primary, 5 secondary, and 8 tertiary locations, in order of priority. Remaining players are placed with default methods.
 - Vanilla: Default behavior
 
 ### Start regions for Shuffle-spawn mode
-<img src="png/StartRegions.png" width="480">
+<img src="png/StartRegions.png">
 
 ### Civilizations supported by Fixed-spawn mode
 If you include these civilizations to the player list in **Custom Game** and select Historical (fixed) starting locations, they will always start in the following areas of the map.
@@ -86,7 +95,7 @@ Default options are recommended unless one is running AI improvement mods (e.g. 
   - Reduced (default): Nerfs mountain ranges
 
 <details>
-<summary>Landmass variations</summary>
+<summary><h3>Landmass variations</h3></summary>
 <img src="png/suez.png">
 <img src="png/marmara.png">
 <img src="png/gibraltar.png">
@@ -94,9 +103,9 @@ Default options are recommended unless one is running AI improvement mods (e.g. 
 </details>
 
 ## Miscellaneous
-- Improved MultilayeredFractal generator
-  - Much easier inputs
-  - More property inputs for regions
+- Improved MultilayeredFractal generator, based on Earth2.py
+  - Much easier inputs, resolved ton of its technical debt
+  - More input properties for regions
 - Lattitude-band based Terrain overrides
 - Bonus generator
   - Runs strategic and food bonus additions to starting plots
@@ -104,8 +113,6 @@ Default options are recommended unless one is running AI improvement mods (e.g. 
     - Swaps / removes ahistoric resources
     - Region specific bonus placement
 - River generator based on that of Tectonics.py
-  - Generates more realistic rivers
-  - More control over river frequency
   - Features river deletion / reduction regions (used to reduce rivers in Sahara desert)
   - Custom north-flowing river generator (used for Nile river)
 - Two tile coasts (expandCoastToTwoTiles)
