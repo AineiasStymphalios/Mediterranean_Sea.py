@@ -53,8 +53,8 @@ Below are its features:
     - More property inputs for regions
 - Lattitude-band based Terrain overrides
 - Bonus generator
-    - Runs strategic and food bonus additions to starting plots
-    - Option: Semi-historical resource placement
+    - Runs strategic and food bonus additions to starting plots (Currently checks for 1 strategic and 2 land food bonuses)
+    - Option: Historical resource placement
         - Swaps / removes ahistoric resources
         - Region specific bonus placement
 - River generator based on that of Tectonics.py
@@ -80,7 +80,7 @@ Below are its features:
     
 def getDescription():
     desc = "A procedurally generated Mediterranean Sea map with realistic geography and climate. "
-    desc += "Resources: 'Semi-historical' replaces Silk Road and New World resources with regional resources, "
+    desc += "Resources: 'Historical' replaces Silk Road and New World resources with regional resources, "
     desc += "removes resources like Ivory from higher lattitudes, and places additional resources to specific historical regions. "
     desc += "Starting Positions: 'Historical (Shuffled)' randomly distributes players among tiered historical regions "
     desc += "(e.g., Italy, Greece, Levant). 'Historical (Fixed)' matches specific Civilizations to their real-world locations, "
@@ -116,7 +116,7 @@ def getCustomMapOptionName(argsList):
 def getNumCustomMapOptionValues(argsList):
     index = argsList[0]
     if index == 0:
-        return 2          # Resources: Vanilla, Semi-historical
+        return 2          # Resources: Vanilla, historical
     elif index == 1:
         return 3          # Starting Positions: Vanilla, Historical (Shuffled), Historical
     elif index == 2:
@@ -134,7 +134,7 @@ def getCustomMapOptionDescAt(argsList):
     selection = argsList[1]
     if index == 0:
         if selection == 0: return "Vanilla"
-        else: return "Semi-historical"
+        else: return "Historical"
     elif index == 1:
         if selection == 0: return "Vanilla"
         elif selection == 1: return "Historical (Shuffled)"
@@ -155,7 +155,7 @@ def getCustomMapOptionDescAt(argsList):
 
 def getCustomMapOptionDefault(argsList):
     index = argsList[0]
-    if index == 0: return 1 # Semi-historical
+    if index == 0: return 1 # historical
     elif index == 1: return 2 # Fixed
     elif index == 2: return 0 # Default to Closed
     elif index == 3: return 0 # Default to Closed
@@ -279,7 +279,7 @@ class MultilayeredFractal(CvMapGeneratorUtil.MultilayeredFractal):
                 iHillsTop1   = regionHillsFrac.getHeightFromPercent(30)
                 iHillsBottom2 = regionHillsFrac.getHeightFromPercent(75)
                 iHillsTop2   = regionHillsFrac.getHeightFromPercent(80)
-                iPeakThreshold = regionPeaksFrac.getHeightFromPercent(5)
+                iPeakThreshold = regionPeaksFrac.getHeightFromPercent(2)
             elif terrain_type == "plateau":
                 iHillsBottom1 = regionHillsFrac.getHeightFromPercent(10)
                 iHillsTop1   = regionHillsFrac.getHeightFromPercent(40)
@@ -291,7 +291,7 @@ class MultilayeredFractal(CvMapGeneratorUtil.MultilayeredFractal):
                 iHillsTop1    = regionHillsFrac.getHeightFromPercent(90)
                 iHillsBottom2 = regionHillsFrac.getHeightFromPercent(20)
                 iHillsTop2    = regionHillsFrac.getHeightFromPercent(90)
-                iPeakThreshold = regionPeaksFrac.getHeightFromPercent(50)
+                iPeakThreshold = regionPeaksFrac.getHeightFromPercent(40)
             elif terrain_type == "mountainous":
                 iHillsBottom1 = regionHillsFrac.getHeightFromPercent(10)
                 iHillsTop1    = regionHillsFrac.getHeightFromPercent(90)
@@ -362,7 +362,7 @@ def generatePlotTypes():
         ("IberiaPyrenees", 0.13, 0.67, 0.13, 0.09, 20, BalanceGrain, ScatterGrain, "mountainous"),
         ("IberiaPortugal", 0.01, 0.42, 0.04, 0.31, 20, BalanceGrain, GatherGrain, "default"),
         #
-        ("Baleares", 0.22, 0.47, 0.07, 0.09, 80, ScatterGrain, GatherGrain, "plateau"),
+        ("Baleares", 0.22, 0.47, 0.07, 0.09, 80, ScatterGrain, GatherGrain, "default"),
         ("Corsica", 0.35, 0.59, 0.03, 0.07, 20, BalanceGrain, GatherGrain, "plateau"),
         ("Sardinia", 0.35, 0.45, 0.03, 0.09, 20, BalanceGrain, GatherGrain, "plateau"),
         ("FrAquitaine", 0.17, 0.76, 0.06, 0.24, 10, BalanceGrain, GatherGrain, "flat"),
@@ -374,17 +374,17 @@ def generatePlotTypes():
         ("ItaLazio", 0.43, 0.64, 0.04, 0.14, 20, GatherGrain, GatherGrain, "default"),
         ("ItaCampania", 0.45, 0.59, 0.07, 0.10, 20, GatherGrain, GatherGrain, "default"),
         ("ItaPuglia-Calabria", 0.49, 0.45, 0.05, 0.19, 30, ScatterGrain, GatherGrain, "default"),
-        ("Sicily", 0.44, 0.36, 0.06, 0.08, 40, ScatterGrain, GatherGrain, "plateau"),
+        ("Sicily", 0.44, 0.36, 0.06, 0.08, 40, ScatterGrain, GatherGrain, "default"),
         ("Malta", 0.50, 0.24, 0.02, 0.04, 50, BalanceGrain, GatherGrain, "default"),
         #
         ("Pannonia-Dacia", 0.46, 0.82, 0.29, 0.19, 20, BalanceGrain, GatherGrain, "default"),
         ("DinaricAlps", 0.48, 0.76, 0.09, 0.10, 20, BalanceGrain, GatherGrain, "plateau"),
-        ("BalkanMountains", 0.58, 0.68, 0.10, 0.18, 0, BalanceGrain, ScatterGrain, "highland"),
+        ("BalkanMountains", 0.58, 0.68, 0.10, 0.18, 0, BalanceGrain, ScatterGrain, "plateau"),
         ("CarpathiansSouth", 0.60, 0.92, 0.09, 0.07, 0, BalanceGrain, GatherGrain, "highland"),
         ("Epirus-Thessaly", 0.59, 0.52, 0.08, 0.16, 30, ScatterGrain, ScatterGrain, "plateau"),
         ("Peleponnese", 0.62, 0.38, 0.05, 0.15, 30, ScatterGrain, GatherGrain, "default"),
-        ("Agean", 0.67, 0.41, 0.07, 0.23, 90, ScatterGrain, GatherGrain, "plateau"),
-        ("Crete", 0.69, 0.31, 0.06, 0.04, 20, BalanceGrain, GatherGrain, "plateau"),
+        ("Agean", 0.67, 0.41, 0.07, 0.23, 90, ScatterGrain, GatherGrain, "default"),
+        ("Crete", 0.69, 0.31, 0.06, 0.04, 20, BalanceGrain, GatherGrain, "default"),
         ("Rhodes", 0.77, 0.41, 0.02, 0.04, 40, ScatterGrain, GatherGrain, "plateau"),
         ("Cyprus", 0.85, 0.41, 0.03, 0.04, 30, BalanceGrain, GatherGrain, "plateau"),
         ("Thrace", 0.67, 0.74, 0.06, 0.09, 10, BalanceGrain, GatherGrain, "flat"),
@@ -395,13 +395,13 @@ def generatePlotTypes():
         ("AnatCentral", 0.82, 0.61, 0.10, 0.20, 10, BalanceGrain, GatherGrain, "plateau"),
         ("AnatPontus", 0.82, 0.80, 0.18, 0.07, 20, BalanceGrain, GatherGrain, "plateau"),
         ("AnatCilicia", 0.82, 0.52, 0.10, 0.09, 30, BalanceGrain, GatherGrain, "highland"),
-        ("Levant", 0.93, 0.10, 0.07, 0.54, 25, ScatterGrain, GatherGrain, "default"),
+        ("Levant", 0.93, 0.10, 0.07, 0.54, 15, ScatterGrain, GatherGrain, "default"),
         #
         ("Egypt", 0.83, 0.00, 0.08, 0.25, 30, BalanceGrain, GatherGrain, "flat"),
         ("Cyrenaica", 0.63, 0.00, 0.21, 0.18, 20, GatherGrain, GatherGrain, "flat"),
         ("Surt", 0.51, 0.00, 0.14, 0.10, 20, GatherGrain, GatherGrain, "flat"),
         ("Tripolitania", 0.17, 0.00, 0.34, 0.20, 20, GatherGrain, GatherGrain, "flat"),
-        ("Tunisia", 0.35, 0.17, 0.06, 0.22, 10, BalanceGrain, GatherGrain, "plateau"),
+        ("Tunisia", 0.35, 0.17, 0.06, 0.22, 10, BalanceGrain, GatherGrain, "default"),
         ("Algeria", 0.17, 0.17, 0.20, 0.18, 10, BalanceGrain, GatherGrain, "plateau"),
         ("Morocco", 0.00, 0.00, 0.17, 0.26, 10, BalanceGrain, GatherGrain, "default"),
         ("Tangiers", 0.04, 0.27, 0.04, 0.07, 30, BalanceGrain, GatherGrain, "default"),
@@ -1052,7 +1052,7 @@ def addRivers():
     )
     riverGen.seedRivers()
     # Add the Nile after the main generation
-    nile_rect = (0.85, 0.0, 0.035, 0.28)
+    nile_rect = (0.84, 0.0, 0.035, 0.28)
     addNorthFlowRiver(nile_rect, min_water_area=5)
     
 
@@ -1143,27 +1143,29 @@ def _assign_all_starting_plots():
     used_regions = set()
     unassigned_players = []
 
+    # Format: (west, south, width, height, bPreferCoast, bPreferRiver)
     SPAWN_REGIONS = {
-        "Italy":    (0.38, 0.69, 0.07, 0.16),
-        "Greece":   (0.61, 0.40, 0.09, 0.16),
-        "Levant":   (0.93, 0.36, 0.06, 0.24),
-        "Tunisia":  (0.34, 0.25, 0.10, 0.19),
-        "Spain":    (0.12, 0.40, 0.09, 0.29),
+        # Primary
+        "Italy":    (0.38, 0.69, 0.07, 0.16, True,  False),
+        "Greece":   (0.61, 0.40, 0.09, 0.16, True,  False),
+        "Levant":   (0.93, 0.33, 0.06, 0.22, True,  False),
+        "Tunisia":  (0.34, 0.25, 0.10, 0.19, True,  False),
+        "Spain":    (0.12, 0.40, 0.09, 0.29, False,  False),
         # Secondary
-        "Gaul":     (0.16, 0.80, 0.14, 0.16),
-        "Dacia":    (0.64, 0.83, 0.12, 0.13),
-        "AsiaMinor":    (0.74, 0.50, 0.13, 0.13),
-        "Egypt":    (0.85, 0.05, 0.035, 0.23),
-        "Morocco":  (0.01, 0.14, 0.10, 0.13),
+        "Gaul":     (0.16, 0.80, 0.14, 0.16, False, False),
+        "Dacia":    (0.64, 0.83, 0.12, 0.13, False, False),
+        "AsiaMinor": (0.74, 0.50, 0.13, 0.13, False,  False),
+        "Egypt":    (0.85, 0.05, 0.035, 0.23, False,  True), # Nile
+        "Morocco":  (0.01, 0.14, 0.10, 0.13, True,  False),
         # Tertiary
-        "Portugal": (0.00, 0.40, 0.06, 0.35),
-        "Sicilies": (0.47, 0.46, 0.08, 0.19),
-        "Pannonia": (0.51, 0.83, 0.08, 0.13),
-        "Epirus": (0.56, 0.66, 0.06, 0.13),
-        "Bosporus": (0.70, 0.66, 0.11, 0.16),
-        "Pontus":   (0.85, 0.79, 0.14, 0.13),
-        "Cyrenaica":   (0.60, 0.14, 0.12, 0.10),
-        "Algeria":   (0.17, 0.26, 0.11, 0.13),
+        "Portugal": (0.00, 0.40, 0.06, 0.35, False,  False),
+        "Sicilies": (0.47, 0.46, 0.08, 0.19, False,  False),
+        "Pannonia": (0.51, 0.83, 0.08, 0.13, False, False),
+        "Epirus":   (0.56, 0.66, 0.06, 0.13, False,  False),
+        "Bosporus": (0.70, 0.66, 0.11, 0.16, True,  False),
+        "Pontus":   (0.85, 0.79, 0.14, 0.13, False,  False),
+        "Cyrenaica": (0.60, 0.14, 0.12, 0.10, True,  False),
+        "Algeria":  (0.17, 0.26, 0.11, 0.13, True,  False),
     }
 
     primary_regions = ["Italy", "Greece", "Tunisia", "Levant", "Spain"]
@@ -1206,8 +1208,10 @@ def _assign_all_starting_plots():
             region_name = civ_mapping.get(civ_str)
             
             if region_name and region_name not in used_regions:
-                rect = SPAWN_REGIONS[region_name]
-                plot_index = _find_plot_in_rect(rect, "Fixed: " + region_name)
+                # Unpack all 6 values now
+                west, south, w, h, bCoast, bRiver = SPAWN_REGIONS[region_name]
+                rect = (west, south, w, h)
+                plot_index = _find_plot_in_rect(rect, "Fixed: " + region_name, 4, bCoast, bRiver)
                 
                 if plot_index != -1:
                     final_assignments[playerID] = plot_index
@@ -1217,9 +1221,6 @@ def _assign_all_starting_plots():
                     used_regions.add(region_name)
                     continue 
             unassigned_players.append(playerID)
-    else:
-        # In Shuffle or Vanilla, everyone starts as unassigned
-        unassigned_players = all_players[:]
 
     # --- PHASE 2: Prioritized Regional Shuffle (For Shuffle OR Fixed-Fallback) ---
     if start_option != 0 and unassigned_players:
@@ -1247,7 +1248,10 @@ def _assign_all_starting_plots():
             civ_str = gc.getCivilizationInfo(gc.getPlayer(playerID).getCivilizationType()).getType()
             if available_regions:
                 fallback_region = available_regions.pop(0)
-                plot_index = _find_plot_in_rect(SPAWN_REGIONS[fallback_region], "Region-Shuffle: " + fallback_region)
+                # Unpack all 6 values here as well
+                west, south, w, h, bCoast, bRiver = SPAWN_REGIONS[fallback_region]
+                rect = (west, south, w, h)
+                plot_index = _find_plot_in_rect(rect, "Region-Shuffle: " + fallback_region, 4, bCoast, bRiver)
                 if plot_index != -1:
                     final_assignments[playerID] = plot_index
                     print "MAP DEBUG: Region-Shuffle - %s assigned to %s" % (civ_str, fallback_region)
@@ -1279,30 +1283,60 @@ def _synced_shuffle(dice, lst):
         result[i], result[j] = result[j], result[i]
     return result
 
-def _find_plot_in_rect(rect, region_name, min_landmass=4):
+def _find_plot_in_rect(rect, region_name, min_landmass=4, bPreferCoast=False, bPreferRiver=False):
+    """
+    Return a plot index of a land tile inside the rectangle.
+    Priority: Coastal Riverside > Coast > River > Any Land.
+    """
     map = CyMap()
     dice = CyGlobalContext().getGame().getMapRand()
     iW, iH = map.getGridWidth(), map.getGridHeight()
 
     west, south, width, height = rect
-    # Ensure clamping is inside bounds [0, W-1]
     west_x = max(0, int(iW * west))
     east_x = min(iW - 1, int(iW * (west + width)))
     south_y = max(0, int(iH * south))
     north_y = min(iH - 1, int(iH * (south + height)))
 
-    eligible = []
+    # Step 1: Find all valid land plots
+    base_eligible = []
     for x in range(west_x, east_x + 1):
         for y in range(south_y, north_y + 1):
             pPlot = map.plot(x, y)
-            # HARD CHECK: Must not be water, must not be peak
             if pPlot and not pPlot.isWater() and not pPlot.isPeak():
                 area = pPlot.area()
                 if area and area.getNumTiles() >= min_landmass:
-                    eligible.append(map.plotNum(x, y))
+                    base_eligible.append(pPlot)
     
-    if not eligible: return -1
-    return eligible[dice.get(len(eligible), "Historical start")]
+    if not base_eligible: return -1
+
+    # Step 2: Apply Coast Preference (Priority 1)
+    if bPreferCoast:
+        coastal_eligible = []
+        for pPlot in base_eligible:
+            if _is_real_coast(pPlot, 5):
+                coastal_eligible.append(pPlot)
+        
+        # If we found coastal plots, they become our new base
+        if len(coastal_eligible) > 0:
+            base_eligible = coastal_eligible
+
+    # Step 3: Apply River Preference (Priority 2)
+    # This will look for rivers within the coastal subset (if found) or the general subset
+    if bPreferRiver:
+        river_eligible = []
+        for pPlot in base_eligible:
+            if pPlot.isRiver():
+                river_eligible.append(pPlot)
+        
+        # If we found riverside plots, they become our final candidates
+        if len(river_eligible) > 0:
+            base_eligible = river_eligible
+
+    # Step 4: Final Selection
+    idx = dice.get(len(base_eligible), "Historical start: %s" % region_name)
+    target_plot = base_eligible[idx]
+    return map.plotNum(target_plot.getX(), target_plot.getY())
 
 def _fallback_start_placement(playerID, existing_coords):
     map = CyMap()
@@ -1419,15 +1453,15 @@ def addCustomResources():
 
     rm = ResourceManager(map, gc, dice, iW, iH)
 
-    # 1. Strategic resources: check_existence=True ensures we only add if one isn't already there
+    # 1. Strategic resources
     strategic_list = ["BONUS_COPPER", "BONUS_IRON", "BONUS_HORSE"]
-    rm.place_bonuses_near_players(strategic_list, count=1, min_dist=2, max_dist=4, check_existence=True, force_terrain=True)
+    rm.place_bonuses_near_players(strategic_list, count=1, check_existence=True)
 
     # 2. Food resources: check_existence=True ensures we don't crowd the start if food is already there
-    food_list = ["BONUS_WHEAT", "BONUS_RICE", "BONUS_COW", "BONUS_SHEEP", "BONUS_PIG", "BONUS_DEER", "BONUS_FISH", "BONUS_CLAM", "BONUS_CRAB"]
-    rm.place_bonuses_near_players(food_list, count=1, min_dist=1, max_dist=2, check_existence=True, force_terrain=True)
+    food_list = ["BONUS_WHEAT", "BONUS_RICE", "BONUS_COW", "BONUS_SHEEP", "BONUS_PIG", "BONUS_DEER"]
+    rm.place_bonuses_near_players(food_list, count=2, check_existence=True)
     
-    if option == 1:  # Semi-historical
+    if option == 1:  # historical
         
         # 3. Resource swaps
         swap_rules = [
@@ -1448,61 +1482,61 @@ def addCustomResources():
                 "rect": (0.85, 0.05, 0.035, 0.284),
                 "bonuses": [
                     ("BONUS_INCENSE", 1, False),
-                    ("BONUS_GOLD", 1, False),
                     ("BONUS_STONE", 1, False),
+                    ("BONUS_HORSE", 1, False),
                 ]
             },
             {
                 "name": "Levant",
-                "rect": (0.930, 0.237, 0.066, 0.406),
+                "rect": (0.930, 0.30, 0.08, 0.25),
                 "bonuses": [
-                    ("BONUS_WHEAT", 1, False),
                     ("BONUS_SILK", 2, False),
                     ("BONUS_DYE", 2, True), 
                     ("BONUS_SPICES", 2, True),
                     ("BONUS_INCENSE", 1, False),
+                    ("BONUS_HORSE", 1, False),
                 ]
             },
             {
                 "name": "Italy",
-                "rect": (0.37, 0.63, 0.10, 0.249),
+                "rect": (0.38, 0.63, 0.10, 0.22),
                 "bonuses": [
                     ("BONUS_WINE", 1, False),
                     ("BONUS_MARBLE", 1, False),
+                    ("BONUS_IRON", 1, False),
                 ]
             },
             {
                 "name": "Greece",
-                "rect": (0.61, 0.35, 0.11, 0.222),
+                "rect": (0.61, 0.35, 0.11, 0.2),
                 "bonuses": [
-                    ("BONUS_SHEEP", 1, False),
                     ("BONUS_WINE", 1, False),
-                    ("BONUS_FISH", 1, False),
                     ("BONUS_MARBLE", 1, False),
+                    ("BONUS_COPPER", 1, False),
                 ]
             },
             {
                 "name": "Tunisia",
-                "rect": (0.35, 0.17, 0.08, 0.269),
+                "rect": (0.34, 0.25, 0.10, 0.20),
                 "bonuses": [
                     ("BONUS_IVORY", 1, False),
                     ("BONUS_MARBLE", 1, False),
                 ]
             },
-            {
-                "name": "Iberia-Gaul",
-                "rect": (0.0, 0.52, 0.27, 0.484),
-                "bonuses": [
-                    ("BONUS_GEMS", 2, True), 
-                    ("BONUS_SILVER", 1, False),
-                ]
-            },
+            # {
+                # "name": "Iberia-Gaul",
+                # "rect": (0.0, 0.52, 0.27, 0.484),
+                # "bonuses": [
+                    # ("BONUS_GEMS", 1, True), 
+                    # ("BONUS_FUR", 1, True), 
+                    # ("BONUS_SILVER", 1, False),
+                # ]
+            # },
             {
                 "name": "Cyrenaica",
                 "rect": (0.60, 0.10, 0.10, 0.13),
                 "bonuses": [
                     ("BONUS_WINE", 1, True),
-                    ("BONUS_FISH", 1, False),
                 ]
             },
         ]
@@ -1534,21 +1568,17 @@ class ResourceManager:
         self._cache[name] = bid
         return bid
 
-    def place_bonuses_near_players(self, bonus_list, count=1, min_dist=2, max_dist=5, check_existence=False, force_placement=True, force_terrain=False):
+    def place_bonuses_near_players(self, bonus_list, count=1, check_existence=False):
         """
-        Consolidated logic for strategic and food placement. 
-        Always avoids placing directly on a player's starting plot.
-        force_terrain: If True, will convert terrain to Plains if no valid land is found for the bonus.
+        Tiered placement logic for LAND starting resources.
+        Excludes the starting plot from both counting and placement.
         """
-        water_bonus_names = ("BONUS_FISH", "BONUS_CLAM", "BONUS_CRAB", "BONUS_WHALE")
         ids = []
-        is_water_bonus = []
         for b in bonus_list:
             ids.append(self._bonus_id(b))
-            is_water_bonus.append(b in water_bonus_names)
 
-        # Get terrain type for forcing
         iPlains = self.gc.getInfoTypeForString("TERRAIN_PLAINS")
+        iFloodplains = self.gc.getInfoTypeForString("FEATURE_FLOOD_PLAINS")
 
         players = []
         for i in range(self.gc.getMAX_CIV_PLAYERS()):
@@ -1559,70 +1589,76 @@ class ResourceManager:
                     players.append((player.getID(), pStart.getX(), pStart.getY()))
 
         for (pid, sx, sy) in players:
+            bfc_offsets = []
+            for dx in range(-2, 3):
+                for dy in range(-2, 3):
+                    if dx == 0 and dy == 0: continue 
+                    if abs(dx) == 2 and abs(dy) == 2: continue 
+                    bfc_offsets.append((dx, dy))
+
+            existing_count = 0
             if check_existence:
-                already_has = False
-                for dx in range(-max_dist, max_dist+1):
-                    for dy in range(-max_dist, max_dist+1):
-                        if abs(dx) + abs(dy) > max_dist: continue
-                        nx, ny = sx + dx, sy + dy
-                        if 0 <= nx < self.iW and 0 <= ny < self.iH:
-                            if self.map.plot(nx, ny).getBonusType(-1) in ids:
-                                already_has = True
-                                break
-                    if already_has: break
-                if already_has: continue
+                for dx, dy in bfc_offsets:
+                    nx, ny = sx + dx, sy + dy
+                    if 0 <= nx < self.iW and 0 <= ny < self.iH:
+                        pPlot = self.map.plot(nx, ny)
+                        # EXCLUDE starting plot from the count check
+                        if pPlot.isStartingPlot(): continue
+                        if pPlot.getBonusType(-1) in ids:
+                            existing_count += 1
+            
+            needed = count - existing_count
+            if needed <= 0: continue
 
-            placed = 0
-            attempts = 0
-            while placed < count and attempts < 30:
-                attempts += 1
-                b_idx = self.dice.get(len(ids), "Bonus Choice")
-                chosen_id = ids[b_idx]
-                is_water = is_water_bonus[b_idx]
+            for _ in range(needed):
+                chosen_id = ids[self.dice.get(len(ids), "Bonus Selection")]
+                tier1, tier2, tier3 = [], [], []
 
-                eligible = []
-                fallback = []
-                terrain_fallback = []
-                
-                for dx in range(-max_dist, max_dist+1):
-                    for dy in range(-max_dist, max_dist+1):
-                        d = abs(dx) + abs(dy)
-                        if d < min_dist or d > max_dist: continue
-                        nx, ny = sx + dx, sy + dy
-                        if 0 <= nx < self.iW and 0 <= ny < self.iH:
-                            pPlot = self.map.plot(nx, ny)
-                            
-                            # CRITICAL: Do not place on start plot
-                            if pPlot.isStartingPlot(): continue
-                            
-                            if pPlot.getBonusType(-1) == -1:
-                                # Tier 1: Natural placement
-                                if pPlot.canHaveBonus(chosen_id, True):
-                                    eligible.append((nx, ny))
-                                # Tier 2: Any non-peak land (if enabled)
-                                elif force_placement and not is_water:
-                                    if not pPlot.isWater() and pPlot.getPlotType() != PlotTypes.PLOT_PEAK:
-                                        fallback.append((nx, ny))
-                                # Tier 3: Terrain override (if enabled)
-                                elif force_terrain and not is_water:
-                                    if not pPlot.isWater() and pPlot.getPlotType() != PlotTypes.PLOT_PEAK:
-                                        terrain_fallback.append((nx, ny))
-                
-                target = None
-                if eligible:
-                    target = eligible[self.dice.get(len(eligible), "B")]
-                elif fallback:
-                    target = fallback[self.dice.get(len(fallback), "F")]
-                elif terrain_fallback:
-                    target = terrain_fallback[self.dice.get(len(terrain_fallback), "T")]
-                    # Convert terrain to Plains to ensure the bonus works correctly
-                    self.map.plot(target[0], target[1]).setTerrainType(iPlains, True, True)
-                
-                if target:
-                    self.map.plot(target[0], target[1]).setBonusType(chosen_id)
-                    placed += 1
+                for dx, dy in bfc_offsets:
+                    nx, ny = sx + dx, sy + dy
+                    if 0 <= nx < self.iW and 0 <= ny < self.iH:
+                        pPlot = self.map.plot(nx, ny)
+                        
+                        # Filter: No starts, no existing bonuses, NO WATER, NO PEAKS
+                        if pPlot.isStartingPlot() or pPlot.getBonusType(-1) != -1: continue
+                        if pPlot.isWater() or pPlot.isPeak(): continue
+
+                        if pPlot.canHaveBonus(chosen_id, True):
+                            tier1.append(pPlot)
+                        elif pPlot.calculateNatureYield(YieldTypes.YIELD_FOOD, TeamTypes.NO_TEAM, False) > 0:
+                            tier2.append(pPlot)
+                        else:
+                            tier3.append(pPlot)
+
+                target_plot = None
+                is_tier3 = False
+                if len(tier1) > 0:
+                    target_plot = tier1[self.dice.get(len(tier1), "T1")]
+                elif len(tier2) > 0:
+                    target_plot = tier2[self.dice.get(len(tier2), "T2")]
+                elif len(tier3) > 0:
+                    target_plot = tier3[self.dice.get(len(tier3), "T3")]
+                    is_tier3 = True
+
+                if target_plot:
+                    if is_tier3:
+                        target_plot.setPlotType(PlotTypes.PLOT_LAND, True, True)
+                        target_plot.setTerrainType(iPlains, True, True)
+
+                    current_feature = target_plot.getFeatureType()
+                    if current_feature != -1 and current_feature != iFloodplains:
+                        if not target_plot.canHaveBonus(chosen_id, True):
+                            target_plot.setFeatureType(FeatureTypes.NO_FEATURE, -1)
+
+                    target_plot.setBonusType(chosen_id)
+                else:
+                    break
 
     def swap_resources(self, swap_rules, clear_feature=False):
+        """
+        Swaps resources globally. Now explicitly skips starting plots to 
+        prevent accidental changes to the capital's immediate tile.
+        """
         for rule in swap_rules:
             old_name = rule[0]
             new_name = rule[1]
@@ -1636,6 +1672,9 @@ class ResourceManager:
 
             for i in range(self.map.numPlots()):
                 pPlot = self.map.plotByIndex(i)
+                # EXCLUDE starting plots from global swaps
+                if pPlot.isStartingPlot(): continue
+                
                 if pPlot.getY() >= y_thresh and pPlot.getBonusType(-1) == old_id:
                     if new_name:
                         pPlot.setBonusType(self._bonus_id(new_name))
@@ -1647,13 +1686,8 @@ class ResourceManager:
 
     def add_region_specific(self, region_specs, force_placement=True):
         """
-        Place bonuses in specified rectangular regions.
-        region_specs: list of dicts with keys:
-            'rect': (west, south, width, height) – fractional coordinates
-            'bonuses': list of (bonus_name, count) or (bonus_name, count, clear_feature)
-        If force_placement is True, when no eligible tile is found (using canHaveBonus),
-        it will place the bonus on any non-peak land tile in the region.
-        Bonus counts are scaled by map size (1x for Duel-Standard, 1.5x for Large, 2x for Huge).
+        Place bonuses in specified regions. 
+        Explicitly excludes player starting plots from selection.
         """
         multiplier = self.size_multiplier[self.world_size]
         for region in region_specs:
@@ -1676,7 +1710,10 @@ class ResourceManager:
                 for x in range(max(0, west_x), min(self.iW, east_x + 1)):
                     for y in range(max(0, south_y), min(self.iH, north_y + 1)):
                         pPlot = self.map.plot(x, y)
+                        
+                        # EXCLUDE starting plots from region-specific placement
                         if pPlot.isStartingPlot(): continue
+                        
                         if pPlot.getBonusType(-1) == -1:
                             if pPlot.canHaveBonus(bonus_id, True):
                                 eligible.append((x, y))
