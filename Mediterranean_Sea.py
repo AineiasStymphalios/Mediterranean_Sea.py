@@ -116,7 +116,7 @@ def getCustomMapOptionName(argsList):
 def getNumCustomMapOptionValues(argsList):
     index = argsList[0]
     if index == 0:
-        return 2          # Resources: Vanilla, Historical
+        return 2          # Resources: Vanilla, historical
     elif index == 1:
         return 3          # Starting Positions: Vanilla, Historical (Shuffled), Historical
     elif index == 2:
@@ -1452,18 +1452,10 @@ def addCustomResources():
     option = CyMap().getCustomMapOption(0)
 
     rm = ResourceManager(map, gc, dice, iW, iH)
-
-    # 1. Strategic resources
-    strategic_list = ["BONUS_COPPER", "BONUS_IRON", "BONUS_HORSE"]
-    rm.place_bonuses_near_players(strategic_list, count=1, check_existence=True)
-
-    # 2. Food resources: check_existence=True ensures we don't crowd the start if food is already there
-    food_list = ["BONUS_WHEAT", "BONUS_RICE", "BONUS_COW", "BONUS_SHEEP", "BONUS_PIG", "BONUS_DEER"]
-    rm.place_bonuses_near_players(food_list, count=2, check_existence=True)
     
     if option == 1:  # historical
         
-        # 3. Resource swaps
+        # 1. Resource swaps
         swap_rules = [
             ("BONUS_IVORY", None, 0.4),          # remove ivory north of 40% height
             ("BONUS_CORN",   "BONUS_COW"),        # 
@@ -1475,7 +1467,7 @@ def addCustomResources():
         ]
         rm.swap_resources(swap_rules, clear_feature=False)
 
-        # 4. Region-specific resources
+        # 2. Region-specific resources
         region_specs = [
             {
                 "name": "Egypt",
@@ -1542,6 +1534,14 @@ def addCustomResources():
         ]
         rm.add_region_specific(region_specs, force_placement=True)
 
+    # 3. Strategic resources
+    strategic_list = ["BONUS_COPPER", "BONUS_IRON", "BONUS_HORSE"]
+    rm.ensure_strategic_bonus(strategic_list, radius=5)
+
+    # 4. Food resources
+    food_list = ["BONUS_WHEAT", "BONUS_RICE", "BONUS_COW", "BONUS_SHEEP", "BONUS_PIG", "BONUS_DEER"]
+    rm.place_bonuses_near_players(food_list, count=2, check_existence=True)
+
 class ResourceManager:
     """Manages custom resource placement for the Mediterranean map script."""
     def __init__(self, map, gc, dice, iW, iH):
@@ -1568,16 +1568,52 @@ class ResourceManager:
         self._cache[name] = bid
         return bid
 
+    def _is_bonus_appropriate_for_plot(self, bonus_id, pPlot):
+        """
+        Checks if the bonus is physically compatible with the plot's 
+        terrain, topography, and feature, ignoring proximity and latitude.
+        """
+        info = self.gc.getBonusInfo(bonus_id)
+        
+        # 1. Check Topography (Hills vs Flat)
+        if pPlot.isHills():
+            if not info.isHills(): return False
+        else:
+            if not info.isFlatlands(): return False
+            
+        # 2. Check Terrain
+        if not info.isTerrain(pPlot.getTerrainType()):
+            return False
+            
+        # 3. Check Feature
+        iFeature = pPlot.getFeatureType()
+        if iFeature != -1:
+            if not info.isFeature(iFeature):
+                # Special case: If it's a feature we are willing to clear (Forest/Jungle)
+                # and the bonus is valid on the underlying terrain, we count it as 'appropriate'
+                # because our placement logic handles the clearing.
+                iFloodplains = self.gc.getInfoTypeForString("FEATURE_FLOOD_PLAINS")
+                if iFeature == iFloodplains: return False # Floodplains usually strictly defined in XML
+                
+                # If the bonus can't exist with the feature AND we aren't allowed to clear it, return False
+                # But for your script, we usually assume we can clear Forest/Jungle for a Tier 1 match.
+                if not info.isTerrain(pPlot.getTerrainType()):
+                    return False
+
+        return True
+    
     def place_bonuses_near_players(self, bonus_list, count=1, check_existence=False):
         """
         Tiered placement logic for LAND starting resources.
-        Excludes the starting plot from both counting and placement.
+        1. Natural Fit: Shuffles bonuses and finds a tile that matches terrain requirements.
+        2. Emergency: Terraforms a foodless tile to Plains Flat and picks a valid bonus.
         """
         ids = []
         for b in bonus_list:
             ids.append(self._bonus_id(b))
 
         iPlains = self.gc.getInfoTypeForString("TERRAIN_PLAINS")
+        iDesert = self.gc.getInfoTypeForString("TERRAIN_DESERT")
         iFloodplains = self.gc.getInfoTypeForString("FEATURE_FLOOD_PLAINS")
 
         players = []
@@ -1589,6 +1625,7 @@ class ResourceManager:
                     players.append((player.getID(), pStart.getX(), pStart.getY()))
 
         for (pid, sx, sy) in players:
+            # 1. Define the Big Fat Cross (21 tiles)
             bfc_offsets = []
             for dx in range(-2, 3):
                 for dy in range(-2, 3):
@@ -1596,64 +1633,174 @@ class ResourceManager:
                     if abs(dx) == 2 and abs(dy) == 2: continue 
                     bfc_offsets.append((dx, dy))
 
+            # 2. Count existing resources from the list in the BFC (Exclude the center tile)
             existing_count = 0
             if check_existence:
                 for dx, dy in bfc_offsets:
                     nx, ny = sx + dx, sy + dy
                     if 0 <= nx < self.iW and 0 <= ny < self.iH:
                         pPlot = self.map.plot(nx, ny)
-                        # EXCLUDE starting plot from the count check
                         if pPlot.isStartingPlot(): continue
                         if pPlot.getBonusType(-1) in ids:
                             existing_count += 1
             
             needed = count - existing_count
-            if needed <= 0: continue
+            
+            # 3. Placement Loop: Run for every bonus still required
+            for i in range(needed):
+                # Shuffle the full list for every individual placement attempt
+                shuffled_ids = _synced_shuffle(self.dice, ids[:])
+                placed_successfully = False
 
-            for _ in range(needed):
-                chosen_id = ids[self.dice.get(len(ids), "Bonus Selection")]
-                tier1, tier2, tier3 = [], [], []
+                # --- TIER 1: NATURAL FIT ---
+                # We iterate through the shuffled bonuses. If Bonus A doesn't fit 
+                # anywhere in the BFC, we move to Bonus B.
+                for chosen_id in shuffled_ids:
+                    tier1_plots = []
+                    for dx, dy in bfc_offsets:
+                        nx, ny = sx + dx, sy + dy
+                        if 0 <= nx < self.iW and 0 <= ny < self.iH:
+                            pPlot = self.map.plot(nx, ny)
+                            
+                            # Filter: No starts, no existing bonuses, NO WATER, NO PEAKS
+                            if pPlot.isStartingPlot() or pPlot.getBonusType(-1) != -1: continue
+                            if pPlot.isWater() or pPlot.isPeak(): continue
 
-                for dx, dy in bfc_offsets:
+                            # Use our manual check to see if the bonus fits this tile's terrain
+                            if self._is_bonus_appropriate_for_plot(chosen_id, pPlot):
+                                tier1_plots.append(pPlot)
+
+                    if len(tier1_plots) > 0:
+                        target_plot = tier1_plots[self.dice.get(len(tier1_plots), "T1 Plot")]
+                        
+                        # Handle feature clearing (Forest/Jungle), but keep Floodplains
+                        current_feature = target_plot.getFeatureType()
+                        if current_feature != -1 and current_feature != iFloodplains:
+                            # Clear feature if the bonus can't naturally sit on it (e.g. Wheat in Forest)
+                            if not target_plot.canHaveBonus(chosen_id, True):
+                                target_plot.setFeatureType(FeatureTypes.NO_FEATURE, -1)
+
+                        target_plot.setBonusType(chosen_id)
+                        placed_successfully = True
+                        break # Successfully placed a Tier 1 bonus, move to next 'needed'
+
+                # --- TIER 2: EMERGENCY TERRAFORM ---
+                # Runs only if NO bonus in the list fits naturally anywhere in the BFC
+                if not placed_successfully:
+                    emergency_plots = []
+                    for dx, dy in bfc_offsets:
+                        nx, ny = sx + dx, sy + dy
+                        if 0 <= nx < self.iW and 0 <= ny < self.iH:
+                            pPlot = self.map.plot(nx, ny)
+                            if pPlot.isStartingPlot() or pPlot.getBonusType(-1) != -1: continue
+                            if pPlot.isWater() or pPlot.isPeak(): continue
+
+                            # Target: Desert, Hills, or Floodplains (all considered 'foodless' candidates)
+                            # calculateNatureYield(Yield, Team, bIgnoreFeature)
+                            if pPlot.calculateNatureYield(YieldTypes.YIELD_FOOD, TeamTypes.NO_TEAM, False) == 0:
+                                emergency_plots.append(pPlot)
+                            elif pPlot.getFeatureType() == iFloodplains:
+                                emergency_plots.append(pPlot)
+
+                    if len(emergency_plots) > 0:
+                        target_plot = emergency_plots[self.dice.get(len(emergency_plots), "Emergency Plot")]
+                        
+                        # 1. Terraform to Plains Flatland
+                        target_plot.setPlotType(PlotTypes.PLOT_LAND, True, True)
+                        target_plot.setTerrainType(iPlains, True, True)
+                        target_plot.setFeatureType(FeatureTypes.NO_FEATURE, -1)
+
+                        # 2. Re-filter the shuffled list for the new Plains Flatland tile
+                        for b_id in shuffled_ids:
+                            if self._is_bonus_appropriate_for_plot(b_id, target_plot):
+                                target_plot.setBonusType(b_id)
+                                placed_successfully = True
+                                break
+                        
+                        # 3. Brute Force: If for some reason nothing fit the manual check, force the first one
+                        if not placed_successfully:
+                            target_plot.setBonusType(shuffled_ids[0])
+                        
+    def ensure_strategic_bonus(self, bonus_list, radius=5):
+        """
+        Scans a wide radius. If the player has NO bonuses from the list, 
+        it places exactly ONE. No terraforming or feature clearing.
+        """
+        ids = []
+        for b in bonus_list:
+            ids.append(self._bonus_id(b))
+
+        players = []
+        for i in range(self.gc.getMAX_CIV_PLAYERS()):
+            player = self.gc.getPlayer(i)
+            if player.isEverAlive():
+                pStart = player.getStartingPlot()
+                if pStart and not pStart.isNone():
+                    players.append((player.getID(), pStart.getX(), pStart.getY()))
+
+        for (pid, sx, sy) in players:
+            # Step 1: Scan for existing bonuses from the list
+            has_strategic = False
+            for dx in range(-radius, radius + 1):
+                for dy in range(-radius, radius + 1):
+                    if abs(dx) + abs(dy) > radius: continue
                     nx, ny = sx + dx, sy + dy
                     if 0 <= nx < self.iW and 0 <= ny < self.iH:
                         pPlot = self.map.plot(nx, ny)
-                        
-                        # Filter: No starts, no existing bonuses, NO WATER, NO PEAKS
-                        if pPlot.isStartingPlot() or pPlot.getBonusType(-1) != -1: continue
-                        if pPlot.isWater() or pPlot.isPeak(): continue
+                        if pPlot.getBonusType(-1) in ids:
+                            has_strategic = True
+                            break
+                if has_strategic: break
+            
+            if has_strategic: continue
 
-                        if pPlot.canHaveBonus(chosen_id, True):
-                            tier1.append(pPlot)
-                        elif pPlot.calculateNatureYield(YieldTypes.YIELD_FOOD, TeamTypes.NO_TEAM, False) > 0:
-                            tier2.append(pPlot)
-                        else:
-                            tier3.append(pPlot)
+            # Step 2: Placement
+            shuffled_ids = _synced_shuffle(self.dice, ids[:])
+            placed_successfully = False
 
-                target_plot = None
-                is_tier3 = False
-                if len(tier1) > 0:
-                    target_plot = tier1[self.dice.get(len(tier1), "T1")]
-                elif len(tier2) > 0:
-                    target_plot = tier2[self.dice.get(len(tier2), "T2")]
-                elif len(tier3) > 0:
-                    target_plot = tier3[self.dice.get(len(tier3), "T3")]
-                    is_tier3 = True
+            # TIER 1: Natural Fit
+            for chosen_id in shuffled_ids:
+                tier1_plots = []
+                for dx in range(-radius, radius + 1):
+                    for dy in range(-radius, radius + 1):
+                        if abs(dx) + abs(dy) > radius: continue
+                        nx, ny = sx + dx, sy + dy
+                        if 0 <= nx < self.iW and 0 <= ny < self.iH:
+                            pPlot = self.map.plot(nx, ny)
+                            # Basic filters
+                            if pPlot.isStartingPlot() or pPlot.getBonusType(-1) != -1: continue
+                            if pPlot.isWater() or pPlot.isPeak(): continue
 
-                if target_plot:
-                    if is_tier3:
-                        target_plot.setPlotType(PlotTypes.PLOT_LAND, True, True)
-                        target_plot.setTerrainType(iPlains, True, True)
+                            # Check if the bonus naturally likes this tile
+                            if self._is_bonus_appropriate_for_plot(chosen_id, pPlot):
+                                tier1_plots.append(pPlot)
 
-                    current_feature = target_plot.getFeatureType()
-                    if current_feature != -1 and current_feature != iFloodplains:
-                        if not target_plot.canHaveBonus(chosen_id, True):
-                            target_plot.setFeatureType(FeatureTypes.NO_FEATURE, -1)
-
+                if len(tier1_plots) > 0:
+                    target_plot = tier1_plots[self.dice.get(len(tier1_plots), "Strat T1")]
                     target_plot.setBonusType(chosen_id)
-                else:
-                    break
+                    placed_successfully = True
+                    break 
 
+            # TIER 2: Emergency (Any Land)
+            # If no bonus fits naturally, just put the first shuffled bonus on any valid land tile.
+            if not placed_successfully:
+                emergency_plots = []
+                for dx in range(-radius, radius + 1):
+                    for dy in range(-radius, radius + 1):
+                        if abs(dx) + abs(dy) > radius: continue
+                        nx, ny = sx + dx, sy + dy
+                        if 0 <= nx < self.iW and 0 <= ny < self.iH:
+                            pPlot = self.map.plot(nx, ny)
+                            # Must be Land, not Peak, not Starting Plot, no existing Bonus
+                            if not pPlot.isWater() and not pPlot.isPeak() and not pPlot.isStartingPlot():
+                                if pPlot.getBonusType(-1) == -1:
+                                    emergency_plots.append(pPlot)
+
+                if len(emergency_plots) > 0:
+                    target_plot = emergency_plots[self.dice.get(len(emergency_plots), "Strat Emergency")]
+                    # Place the first bonus from our shuffled list
+                    target_plot.setBonusType(shuffled_ids[0])
+                        
     def swap_resources(self, swap_rules, clear_feature=False):
         """
         Swaps resources globally. Now explicitly skips starting plots to 
