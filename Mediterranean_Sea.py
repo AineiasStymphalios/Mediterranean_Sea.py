@@ -1536,11 +1536,11 @@ def addCustomResources():
 
     # 3. Strategic resources
     strategic_list = ["BONUS_COPPER", "BONUS_IRON", "BONUS_HORSE"]
-    rm.ensure_strategic_bonus(strategic_list, radius=5)
+    rm.place_bonus_in_radius(strategic_list, radius=5)
 
     # 4. Food resources
     food_list = ["BONUS_WHEAT", "BONUS_RICE", "BONUS_COW", "BONUS_SHEEP", "BONUS_PIG", "BONUS_DEER"]
-    rm.place_bonuses_near_players(food_list, count=2, check_existence=True)
+    rm.place_food_bonus_in_BFC(food_list, count=2, check_existence=True)
 
 class ResourceManager:
     """Manages custom resource placement for the Mediterranean map script."""
@@ -1602,7 +1602,7 @@ class ResourceManager:
 
         return True
     
-    def place_bonuses_near_players(self, bonus_list, count=1, check_existence=False):
+    def place_food_bonus_in_BFC(self, bonus_list, count=1, check_existence=False):
         """
         Tiered placement logic for LAND starting resources.
         1. Natural Fit: Shuffles bonuses and finds a tile that matches terrain requirements.
@@ -1720,11 +1720,11 @@ class ResourceManager:
                         # 3. Brute Force: If for some reason nothing fit the manual check, force the first one
                         if not placed_successfully:
                             target_plot.setBonusType(shuffled_ids[0])
-                        
-    def ensure_strategic_bonus(self, bonus_list, radius=5):
+
+    def place_bonus_in_radius(self, bonus_list, radius=5):
         """
-        Scans a wide radius. If the player has NO bonuses from the list, 
-        it places exactly ONE. No terraforming or feature clearing.
+        Generic function to ensure a resource type exists within a radius.
+        Uses plotDistance to ensure diagonal resources are correctly scanned.
         """
         ids = []
         for b in bonus_list:
@@ -1740,67 +1740,87 @@ class ResourceManager:
 
         for (pid, sx, sy) in players:
             # Step 1: Scan for existing bonuses from the list
-            has_strategic = False
+            has_bonus = False
+            found_x, found_y = -1, -1
+            
+            # Nested loop creates a square, plotDistance trims it to a circle
             for dx in range(-radius, radius + 1):
                 for dy in range(-radius, radius + 1):
-                    if abs(dx) + abs(dy) > radius: continue
                     nx, ny = sx + dx, sy + dy
+                    
+                    # Boundary check
                     if 0 <= nx < self.iW and 0 <= ny < self.iH:
-                        pPlot = self.map.plot(nx, ny)
-                        if pPlot.getBonusType(-1) in ids:
-                            has_strategic = True
-                            break
-                if has_strategic: break
+                        # plotDistance is the engine's standard for circular radii
+                        if plotDistance(sx, sy, nx, ny) <= radius:
+                            pPlot = self.map.plot(nx, ny)
+                            # Use TeamTypes.NO_TEAM to see all placed bonuses
+                            if pPlot.getBonusType(TeamTypes.NO_TEAM) in ids:
+                                has_bonus = True
+                                found_x, found_y = nx, ny
+                                break
+                if has_bonus: break
             
-            if has_strategic: continue
+            if has_bonus:
+                # DEBUG: Place a sign on the EXISTING resource that triggered the skip
+                # This helps you verify that the Horse 3 tiles away was actually detected.
+                # CyEngine().addSign(self.map.plot(found_x, found_y), -1, "DEBUG: Found existing for P%d" % pid)
+                print "MAP DEBUG: Player %d skipped. Found existing bonus at (%d, %d)" % (pid, found_x, found_y)
+                continue
 
-            # Step 2: Placement
+            # Step 2: Placement (Same logic as before, but using plotDistance for consistency)
             shuffled_ids = _synced_shuffle(self.dice, ids[:])
             placed_successfully = False
+            target_plot = None
+            final_id = -1
 
             # TIER 1: Natural Fit
             for chosen_id in shuffled_ids:
                 tier1_plots = []
                 for dx in range(-radius, radius + 1):
                     for dy in range(-radius, radius + 1):
-                        if abs(dx) + abs(dy) > radius: continue
                         nx, ny = sx + dx, sy + dy
                         if 0 <= nx < self.iW and 0 <= ny < self.iH:
-                            pPlot = self.map.plot(nx, ny)
-                            # Basic filters
-                            if pPlot.isStartingPlot() or pPlot.getBonusType(-1) != -1: continue
-                            if pPlot.isWater() or pPlot.isPeak(): continue
+                            if plotDistance(sx, sy, nx, ny) <= radius:
+                                pPlot = self.map.plot(nx, ny)
+                                if pPlot.isStartingPlot() or pPlot.getBonusType(-1) != -1: continue
+                                if pPlot.isWater() or pPlot.isPeak(): continue
 
-                            # Check if the bonus naturally likes this tile
-                            if self._is_bonus_appropriate_for_plot(chosen_id, pPlot):
-                                tier1_plots.append(pPlot)
+                                if self._is_bonus_appropriate_for_plot(chosen_id, pPlot):
+                                    tier1_plots.append(pPlot)
 
                 if len(tier1_plots) > 0:
-                    target_plot = tier1_plots[self.dice.get(len(tier1_plots), "Strat T1")]
-                    target_plot.setBonusType(chosen_id)
+                    target_plot = tier1_plots[self.dice.get(len(tier1_plots), "Radius T1")]
+                    final_id = chosen_id
                     placed_successfully = True
                     break 
 
             # TIER 2: Emergency (Any Land)
-            # If no bonus fits naturally, just put the first shuffled bonus on any valid land tile.
             if not placed_successfully:
                 emergency_plots = []
                 for dx in range(-radius, radius + 1):
                     for dy in range(-radius, radius + 1):
-                        if abs(dx) + abs(dy) > radius: continue
                         nx, ny = sx + dx, sy + dy
                         if 0 <= nx < self.iW and 0 <= ny < self.iH:
-                            pPlot = self.map.plot(nx, ny)
-                            # Must be Land, not Peak, not Starting Plot, no existing Bonus
-                            if not pPlot.isWater() and not pPlot.isPeak() and not pPlot.isStartingPlot():
-                                if pPlot.getBonusType(-1) == -1:
-                                    emergency_plots.append(pPlot)
+                            if plotDistance(sx, sy, nx, ny) <= radius:
+                                pPlot = self.map.plot(nx, ny)
+                                if not pPlot.isWater() and not pPlot.isPeak() and not pPlot.isStartingPlot():
+                                    if pPlot.getBonusType(-1) == -1:
+                                        emergency_plots.append(pPlot)
 
                 if len(emergency_plots) > 0:
-                    target_plot = emergency_plots[self.dice.get(len(emergency_plots), "Strat Emergency")]
-                    # Place the first bonus from our shuffled list
-                    target_plot.setBonusType(shuffled_ids[0])
-                        
+                    target_plot = emergency_plots[self.dice.get(len(emergency_plots), "Radius Emergency")]
+                    final_id = shuffled_ids[0]
+                    placed_successfully = True
+
+            if placed_successfully and target_plot:
+                target_plot.setBonusType(final_id)
+                
+                # Visual Marker for newly added resources
+                bonus_name = self.gc.getBonusInfo(final_id).getType()
+                # CyEngine().addSign(target_plot, -1, "DEBUG: Added " + bonus_name)
+                print "MAP DEBUG: Placed %s for Player %d at (%d, %d)" % (bonus_name, pid, target_plot.getX(), target_plot.getY())
+
+
     def swap_resources(self, swap_rules, clear_feature=False):
         """
         Swaps resources globally. Now explicitly skips starting plots to 

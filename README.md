@@ -25,10 +25,10 @@ C:\Program Files\Firaxis Games\Civilization 4\Beyond the Sword\PublicMaps
 C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization IV Beyond the Sword\Beyond the Sword\PublicMaps
 ```
 ## Version support
-The mapscript supports Civ4 Beyond the Sword, Warlords, and Vanilla.
+This mapscript supports Civ4 Beyond the Sword, Warlords, and Vanilla.
 
 ## Mod support
-The mapscript should work with most vanilla-like mods (e.g. BUG, BAT, AdvCiv ...).
+This mapscript should work with most vanilla-like mods (e.g. BUG, BAT, AdvCiv ...).
 Mods that _remove_ Civilizations, Bonuses, Terrain etc. may cause unexpected behavior.
 
 # Features
