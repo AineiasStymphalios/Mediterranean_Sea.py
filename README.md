@@ -4,10 +4,10 @@ A Civilization IV mapscript which procedurally generates maps with quasi-realist
 ![StandardSizeThumb](png/StandardSizeThumb.png)
 <details>
 <summary><h3>Screenshots</h3></summary>
-<img src="png/italy.png">
-<img src="png/greece.png">
-<img src="png/levant.png">
-<img src="png/EgyptNile.png">
+<img src="png/Italy.png">
+<img src="png/Greece.png">
+<img src="png/Danube.png">
+<img src="png/Levant_Egypt.png">
 </details>
 
 

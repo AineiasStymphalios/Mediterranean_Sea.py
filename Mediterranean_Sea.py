@@ -49,7 +49,7 @@ def isAdvancedMap():
 # Custom Options
 # -----------------------------------------------------------------------------
 def getNumCustomMapOptions():
-	return 10
+	return 11
 
 def getCustomMapOptionName(argsList):
 	index = argsList[0]
@@ -63,7 +63,8 @@ def getCustomMapOptionName(argsList):
 		"Historical Resources",
 		"Land Food Across Map",
 		"Minimum land food at start",
-		"Start Options"
+		"Start Options",
+		"Debug Signs"
 	]
 	if index < len(names):
 		return names[index]
@@ -81,6 +82,7 @@ def getNumCustomMapOptionValues(argsList):
 	if index == 7: return 4 # Map Food: Disabled, 4x4, 5x5, 6x6
 	if index == 8: return 3 # Start Food: 0, 1, 2
 	if index == 9: return 2 # Start Options: Default, Fixed
+	if index == 10: return 2 # Debug Signs: Disabled, Enabled
 	return 0
 
 def getCustomMapOptionDescAt(argsList):
@@ -122,6 +124,9 @@ def getCustomMapOptionDescAt(argsList):
 	if index == 9: # Start Options
 		if selection == 0: return "Vanilla"
 		return "Historical"
+	if index == 10: # Debug Signs
+		if selection == 0: return "Disabled"
+		return "Enabled"
 	return ""
 
 def getCustomMapOptionDefault(argsList):
@@ -136,6 +141,7 @@ def getCustomMapOptionDefault(argsList):
 	if index == 7: return 3 # Map Food
 	if index == 8: return 1 # 1 Food at starts
 	if index == 9: return 1 # starts
+	if index == 10: return 0 # Debug Signs
 	return 0
 
 # -----------------------------------------------------------------------------
@@ -579,7 +585,7 @@ def generatePlotTypes():
 	if m.getCustomMapOption(1) == 1:
 		regions.append(("Suez", "Rect", 0.878, 0.117, 0.166, 0.059, 291, "water", GatherGrain, ScatterGrain, 100, False))
 	if m.getCustomMapOption(2) == 0:
-		regions.append(("Bosporos", "Isotri", 0.723, 0.622, 0.075, 0.179, 242, "default", ScatterGrain, ScatterGrain, 5, False))
+		regions.append(("Bosporos", "Isotri", 0.723, 0.622, 0.075, 0.179, 242, "flat", ScatterGrain, ScatterGrain, 5, False))
 	if m.getCustomMapOption(3) == 1:
 		regions.append(("Gibraltar", "Rect", 0.063, 0.471, 0.096, 0.051, 349, "water", GatherGrain, ScatterGrain, 100, False))
 
@@ -2129,7 +2135,8 @@ def _assign_all_starting_plots(): # <- Starting Plot Assignments Here
 	# --- PHASE 1: Fixed Assignments ---
 	if start_option == 1:
 		# Call this here to place Debug signs on the map
-		_add_spawn_signs(SPAWN_REGIONS)
+		if map.getCustomMapOption(10) == 1:
+			_add_spawn_signs(SPAWN_REGIONS)
 		
 		for playerID in all_players:
 			civ_str = gc.getCivilizationInfo(gc.getPlayer(playerID).getCivilizationType()).getType()
