@@ -32,26 +32,12 @@ This mapscript should work with most vanilla-like mods (e.g. BUG, BAT, AdvCiv ..
 Mods that _remove_ Civilizations, Bonuses, Terrain etc. may cause unexpected behavior.
 
 # Features
-## Map Dimensions
-The script generates maps with ratios approximately 2.33:1.
-| Map Size | Dimensions |
-| :--- | :--- |
-| Duel | 36×16 |
-| Tiny | 48×20 |
-| Small | 60×28 |
-| Standard | 72×32 |
-| Large | 84×36 |
-| Huge | 92×40 |
-
-Gameplay-wise, this should result in empire sizes similar to that of Inland_Sea.py.
 
 ## Starting Location Options
-- Historical (Fixed): If there are any map-appropriate Vanilla BTS Civilizations in the playerlist, they are placed on fixed regions. Remaining players assignments fall back to the Shuffle method, and then to default methods.
-- Historical (Shuffle): Randomly places all players in 5 primary, 5 secondary, and 8 tertiary locations, in order of priority. Remaining players are placed with default methods.
+- Historical: If there are any map-appropriate Vanilla BTS Civilizations in the playerlist, they are placed on fixed regions. Remaining players are randomly placed in 5 primary, 5 secondary, and 8 tertiary locations, in order of priority.
 - Vanilla: Default behavior
 
-### Start regions for Shuffle-spawn mode
-<img src="png/StartRegions.png">
+
 
 ### Civilizations supported by Fixed-spawn mode
 If you include these civilizations to the player list in **Custom Game** and select Historical (fixed) starting locations, they will always start in the following areas of the map.
@@ -65,16 +51,18 @@ If you include these civilizations to the player list in **Custom Game** and sel
 |  | `CIVILIZATION_SPAIN` | Spain | Classical Iberians|
 |  | `CIVILIZATION_CELT` | Gaul | |
 |  | `CIVILIZATION_EGYPT` | Egypt | |
-|  | `CIVILIZATION_MONGOL` | Dacia | Thracians, Scythians, Huns |
-|  | `CIVILIZATION_BABYLON` | AsiaMinor | Lydians, Phrygians, Trojans ... |
-| **Medieval Civs** | `CIVILIZATION_PORTUGAL` | Portugal | |
+|  | `CIVILIZATION_MONGOL` | Steppe | Thracians, Scythians, Huns |
+| **Medieval Civs** 
+| `CIVILIZATION_PORTUGAL` | Portugal | |
 |  | `CIVILIZATION_VIKING` | Sicilies | Norman Kingdom of Sicily |
 |  | `CIVILIZATION_FRANCE` | Gaul | |
-|  | `CIVILIZATION_HOLY_ROMAN` | Pannonia | Austria-Hungary |
+|  | `CIVILIZATION_HOLY_ROMAN` | Germania | |
+|  | `CIVILIZATION_GERMANY` | Germania | |
+|  | `CIVILIZATION_RUSSIA` | Steppe | |
 |  | `CIVILIZATION_BYZANTIUM` | Bosporus | |
-|  | `CIVILIZATION_OTTOMAN` | AsiaMinor | |
-|  | `CIVILIZATION_ARABIA` | Levant | |
+|  | `CIVILIZATION_OTTOMAN` | Bosporus | |
 |  | `CIVILIZATION_MALI` | Morocco | |
+|  | `CIVILIZATION_ETHIOPIA` | Morocco | |
 
 ## Bonus generation options
 - Vanilla: Default behavior (Runs strategic and food bonus checks / additions near starting plots)
@@ -103,17 +91,5 @@ Default options are recommended unless one is running AI improvement mods (e.g. 
 </details>
 
 ## Miscellaneous
-- Improved MultilayeredFractal generator, based on Earth2.py
-  - Much easier inputs, resolved ton of its technical debt
-  - More input properties for regions
-- Lattitude-band based Terrain overrides
-- Bonus generator
-  - Runs strategic and food bonus additions to starting plots
-  - Option: Semi-historical resource placement
-    - Swaps / removes ahistoric resources
-    - Region specific bonus placement
-- River generator based on that of Tectonics.py
-  - Features river deletion / reduction regions (used to reduce rivers in Sahara desert)
-  - Custom north-flowing river generator (used for Nile river)
-- Two tile coasts (expandCoastToTwoTiles)
+- Based on [GeometricMultiFractal)](https://github.com/AineiasStymphalios/GeometricMultiFractal) 
 
